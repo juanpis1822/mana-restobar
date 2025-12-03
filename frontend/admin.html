@@ -13,9 +13,11 @@
         <div class="login-box">
             <h1 style="color: var(--primary);">🔐 Panel Administrativo</h1>
             <p style="color: #666; margin-bottom: 1.5rem;">Ingresa tus credenciales</p>
+            
             <div class="form-group">
                 <input type="password" id="passInput" placeholder="Contraseña" autofocus style="text-align: center; font-size: 1.2rem;">
             </div>
+
             <div class="login-buttons">
                 <button type="button" onclick="checkPassword()" class="btn btn-primary" style="flex: 1;">🔓 Ingresar</button>
                 <button type="button" onclick="goToHome()" class="btn btn-info" style="flex: 1;">← Inicio</button>
@@ -25,7 +27,6 @@
 
     <div id="dashboardSection" class="container-admin" style="display: none;">
         <div class="header-buttons">
-            <button onclick="goToHome()" class="btn btn-info">← Ir a Inicio</button>
             <button onclick="logout()" class="btn btn-danger">🚪 Cerrar Sesión</button>
         </div>
 
@@ -58,8 +59,9 @@
             <form id="addDishForm" class="admin-form" onsubmit="submitAddDish(event)">
                 <div class="form-group">
                     <label>Nombre del Plato</label>
-                    <input type="text" id="nameInput" required>
+                    <input type="text" id="nameInput" placeholder="Ej: Cappuccino Especial" required>
                 </div>
+                
                 <div class="form-group">
                     <label>Categoría</label>
                     <select id="categoryInput" required>
@@ -69,18 +71,23 @@
                         <option value="Alimentos">Alimentos</option>
                     </select>
                 </div>
+                
                 <div class="form-group">
                     <label>Precio</label>
-                    <input type="number" id="priceInput" min="0" required>
+                    <input type="number" id="priceInput" min="0" placeholder="Ej: 5000" required>
                 </div>
+
                 <div class="form-group">
-                    <label>Imagen (Opcional)</label>
+                    <label>Imagen del Plato (Opcional)</label>
                     <input type="file" id="imageInput" accept="image/*" style="padding: 0.4rem; background: #fff;">
+                    <small style="color: var(--text-muted);">📸 Se recomienda una imagen horizontal.</small>
                 </div>
+
                 <div class="form-group">
                     <label>Descripción</label>
                     <textarea id="descInput" rows="3"></textarea>
                 </div>
+                
                 <button type="submit" class="btn btn-primary btn-block">➕ Guardar Plato</button>
             </form>
         </div>
@@ -122,7 +129,9 @@
                     </div>
                     <button onclick="changeAdminPassword()" class="btn btn-primary" style="height: 42px;">Actualizar</button>
                 </div>
-                <p style="font-size: 0.85rem; color: #888; margin-top: 10px;">ℹ️ Necesitas ingresar tu clave actual para autorizar el cambio.</p>
+                <p style="font-size: 0.85rem; color: #888; margin-top: 10px;">
+                    ℹ️ Necesitas ingresar tu clave actual para autorizar el cambio.
+                </p>
             </div>
 
             <div class="config-section">
