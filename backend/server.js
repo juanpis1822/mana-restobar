@@ -4,36 +4,37 @@ const cors = require('cors');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
-const axios = require('axios'); // Para la API de Instagram si la usas
+const axios = require('axios');
+const crypto = require('crypto'); // Para generar tokens de seguridad
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Configuración básica
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// --- CONFIGURACIÓN DE BASE DE DATOS ---
+// --- BASE DE DATOS ---
 const dbDir = path.join(__dirname, 'database');
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 const dbPath = path.join(dbDir, 'manacoffee.db');
 let db;
 
+// Inicializar DB
 const initDB = () => new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => {
         if (err) { console.error('Error BD:', err); reject(err); }
         else { 
             console.log('✅ Conectado a SQLite');
-            migrateTables().then(createTables).then(resolve).catch(reject);
+            createTables().then(resolve).catch(reject);
         }
     });
 });
 
-// --- HELPERS PARA PROMESAS (CORREGIDOS) ---
-// Estos son los que arreglan el error del Login
-
+// Helpers para Promesas (Async/Await)
 const runAsync = (sql, params = []) => new Promise((resolve, reject) => {
     db.run(sql, params, function(err) {
         if (err) reject(err);
@@ -55,31 +56,7 @@ const allAsync = (sql, params = []) => new Promise((resolve, reject) => {
     });
 });
 
-// --- MIGRACIONES Y TABLAS ---
-const migrateTables = () => new Promise((resolve, reject) => {
-    db.all("SELECT name FROM sqlite_master WHERE type='table' AND name='reservations'", (err, tables) => {
-        if (err) { reject(err); return; }
-        if (tables && tables.length > 0) {
-            db.all("PRAGMA table_info(reservations)", (err, columns) => {
-                if (err) { reject(err); return; }
-                const hasTimeSlot = columns.some(col => col.name === 'timeSlot');
-                if (!hasTimeSlot) {
-                    console.log('🔄 Migrando tabla reservations...');
-                    db.run('ALTER TABLE reservations RENAME TO reservations_old', (err) => {
-                        if (err) { reject(err); return; }
-                        console.log('✓ Tabla renombrada');
-                        resolve();
-                    });
-                } else {
-                    resolve();
-                }
-            });
-        } else {
-            resolve();
-        }
-    });
-});
-
+// Crear Tablas
 const createTables = () => new Promise((resolve, reject) => {
     db.serialize(() => {
         // Platos
@@ -106,11 +83,12 @@ const createTables = () => new Promise((resolve, reject) => {
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
         )`);
 
-        // Admin
+        // Admin (Ahora con columna TOKEN para seguridad)
         db.run(`CREATE TABLE IF NOT EXISTS admin (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            token TEXT
         )`);
 
         // Configuración
@@ -120,7 +98,7 @@ const createTables = () => new Promise((resolve, reject) => {
             value TEXT NOT NULL
         )`);
 
-        // Datos por defecto (Clave inicial: 1234)
+        // Datos por defecto (Admin inicial)
         db.run(`INSERT OR IGNORE INTO admin (username, password) VALUES (?, ?)`, ['admin', '1234']);
         db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['minHours', '8']);
         db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['maxCapacity', '30']);
@@ -130,9 +108,80 @@ const createTables = () => new Promise((resolve, reject) => {
     });
 });
 
-// --- RUTAS DE LA API ---
+// --- MIDDLEWARE DE SEGURIDAD (PROTECTOR DE RUTAS) ---
+// Esta función verifica si quien pide datos es el admin real
+const requireAuth = async (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Formato: "Bearer TOKEN123"
 
-// 1. PLATOS (DISHES)
+    if (!token) return res.status(401).json({ error: 'No autorizado. Falta token.' });
+
+    try {
+        // Buscamos si existe un admin con ese token activo
+        const admin = await getAsync('SELECT * FROM admin WHERE token = ?', [token]);
+        
+        if (!admin) {
+            return res.status(403).json({ error: 'Sesión expirada o inválida' });
+        }
+        
+        // Si existe, dejamos pasar
+        next();
+    } catch (err) {
+        return res.status(500).json({ error: 'Error de autenticación' });
+    }
+};
+
+// ==========================================
+// RUTAS DE LA API
+// ==========================================
+
+// --- 1. LOGIN & SEGURIDAD ---
+
+// Login (Genera el token de sesión)
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const admin = await getAsync('SELECT * FROM admin WHERE username = ? AND password = ?', [username, password]);
+        
+        if (!admin) return res.status(401).json({ error: 'Credenciales inválidas' });
+
+        // Generar un token único y seguro
+        const token = crypto.randomBytes(32).toString('hex');
+        
+        // Guardar el token en la BD para este usuario
+        await runAsync('UPDATE admin SET token = ? WHERE username = ?', [token, username]);
+
+        res.json({ message: 'Bienvenido', token: token });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Logout (Borra el token para cerrar sesión real)
+app.post('/api/admin/logout', async (req, res) => {
+    try {
+        // Borramos el token de todos los admins (o podrías hacerlo por usuario si envías quién es)
+        await runAsync('UPDATE admin SET token = NULL');
+        res.json({ message: 'Sesión cerrada' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Cambiar Contraseña (PROTEGIDO)
+app.put('/api/admin/password', requireAuth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        
+        const admin = await getAsync('SELECT * FROM admin WHERE username = ?', ['admin']);
+        if (admin.password !== currentPassword) {
+            return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+        }
+
+        await runAsync('UPDATE admin SET password = ? WHERE username = ?', [newPassword, 'admin']);
+        res.json({ message: 'Contraseña actualizada' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// --- 2. PLATOS (DISHES) ---
+
+// Ver platos (Público)
 app.get('/api/dishes', async (req, res) => {
     try {
         const dishes = await allAsync('SELECT * FROM dishes ORDER BY id DESC');
@@ -140,28 +189,32 @@ app.get('/api/dishes', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/dishes', async (req, res) => {
+// Crear plato (PROTEGIDO)
+app.post('/api/dishes', requireAuth, async (req, res) => {
     try {
         const { name, category, price, description, image } = req.body;
-        if (!name || !category || !price) return res.status(400).json({ error: 'Faltan campos' });
+        if (!name || !price) return res.status(400).json({ error: 'Faltan datos' });
         
-        const result = await runAsync(
+        await runAsync(
             `INSERT INTO dishes (name, category, price, description, image) VALUES (?, ?, ?, ?, ?)`,
             [name, category, price, description || '', image || null]
         );
-        res.status(201).json({ id: result.id });
+        res.json({ message: 'Plato creado' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/dishes/:id', async (req, res) => {
+// Borrar plato (PROTEGIDO)
+app.delete('/api/dishes/:id', requireAuth, async (req, res) => {
     try {
         await runAsync('DELETE FROM dishes WHERE id = ?', [req.params.id]);
         res.json({ message: 'Eliminado' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 2. RESERVAS (RESERVATIONS)
-app.get('/api/reservations', async (req, res) => {
+// --- 3. RESERVAS ---
+
+// Ver reservas (PROTEGIDO - Solo el admin debe ver la lista completa)
+app.get('/api/reservations', requireAuth, async (req, res) => {
     try {
         const reservations = await allAsync('SELECT * FROM reservations ORDER BY date DESC, timeSlot ASC');
         reservations.forEach(r => { 
@@ -171,7 +224,8 @@ app.get('/api/reservations', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/reservations/:id', async (req, res) => {
+// Ver detalle de una reserva (PROTEGIDO)
+app.get('/api/reservations/:id', requireAuth, async (req, res) => {
     try {
         const reservation = await getAsync('SELECT * FROM reservations WHERE id = ?', [req.params.id]);
         if (!reservation) return res.status(404).json({ error: 'No encontrada' });
@@ -180,40 +234,42 @@ app.get('/api/reservations/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Crear reserva (PÚBLICO - Los clientes deben poder reservar)
 app.post('/api/reservations', async (req, res) => {
     try {
         const { name, phone, date, timeSlot, guests, items, total } = req.body;
-        if (!name || !phone || !date || !timeSlot || !guests || !items) return res.status(400).json({ error: 'Faltan campos' });
+        if (!name || !date || !timeSlot) return res.status(400).json({ error: 'Faltan datos' });
 
+        // Verificar capacidad
         const config = await getAsync('SELECT value FROM config WHERE key = ?', ['maxCapacity']);
         const maxCapacity = parseInt(config?.value || 30);
+        
+        const existing = await allAsync('SELECT SUM(guests) as t FROM reservations WHERE date = ? AND timeSlot = ?', [date, timeSlot]);
+        const used = existing[0]?.t || 0;
 
-        const reservasHora = await allAsync(
-            'SELECT SUM(guests) as totalGuests FROM reservations WHERE date = ? AND timeSlot = ?',
-            [date, timeSlot]
-        );
-        const totalInSlot = reservasHora[0]?.totalGuests || 0;
-
-        if (totalInSlot + guests > maxCapacity) {
-            return res.status(400).json({ error: `Capacidad limitada. Disponible: ${maxCapacity - totalInSlot}` });
+        if (used + guests > maxCapacity) {
+            return res.status(400).json({ error: 'Lo sentimos, no hay cupo suficiente en ese horario.' });
         }
 
-        const result = await runAsync(
+        await runAsync(
             `INSERT INTO reservations (name, phone, date, timeSlot, guests, items, total) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [name, phone, date, timeSlot, guests, JSON.stringify(items), total]
         );
-        res.status(201).json({ id: result.id });
+        res.json({ message: 'Reserva creada con éxito' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/reservations/:id', async (req, res) => {
+// Borrar reserva (PROTEGIDO)
+app.delete('/api/reservations/:id', requireAuth, async (req, res) => {
     try {
         await runAsync('DELETE FROM reservations WHERE id = ?', [req.params.id]);
         res.json({ message: 'Eliminado' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 3. CONFIGURACIÓN (CONFIG)
+// --- 4. CONFIGURACIÓN ---
+
+// Leer config (Público - el frontend necesita saber los horarios)
 app.get('/api/config', async (req, res) => {
     try {
         const configs = await allAsync('SELECT key, value FROM config');
@@ -225,90 +281,28 @@ app.get('/api/config', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.put('/api/config/:key', async (req, res) => {
+// Modificar config (PROTEGIDO)
+app.put('/api/config/:key', requireAuth, async (req, res) => {
     try {
         const { value } = req.body;
         const valueStr = typeof value === 'string' ? value : JSON.stringify(value);
         await runAsync(`INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)`, [req.params.key, valueStr]);
-        res.json({ message: 'Actualizado' });
+        res.json({ message: 'Configuración actualizada' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 4. ADMIN & LOGIN (Rutas Corregidas)
-app.post('/api/admin/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        
-        // Esta es la consulta que fallaba antes. Ahora usará el getAsync corregido.
-        const admin = await getAsync('SELECT * FROM admin WHERE username = ? AND password = ?', [username, password]);
-        
-        if (!admin) {
-            return res.status(401).json({ error: 'Credenciales inválidas' });
-        }
-        
-        res.json({ message: 'OK' });
-    } catch (err) { 
-        console.error("Login Error:", err);
-        res.status(500).json({ error: err.message }); 
-    }
-});
-
-// CAMBIAR CONTRASEÑA
-app.put('/api/admin/password', async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Faltan datos' });
-
-        // 1. Verificar actual
-        const admin = await getAsync('SELECT * FROM admin WHERE username = ?', ['admin']);
-        
-        if (!admin || admin.password !== currentPassword) {
-            return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
-        }
-
-        // 2. Actualizar
-        await runAsync('UPDATE admin SET password = ? WHERE username = ?', [newPassword, 'admin']);
-        
-        res.json({ message: 'Contraseña actualizada' });
-    } catch (err) { 
-        res.status(500).json({ error: err.message }); 
-    }
-});
-
-// --- RUTA INSTAGRAM (Opcional - solo si tienes token en .env) ---
-app.get('/api/instagram', async (req, res) => {
-    try {
-        const token = process.env.INSTAGRAM_ACCESS_TOKEN;
-        if (!token) return res.json([]); // Si no hay token, devuelve vacío
-
-        const url = `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink&access_token=${token}`;
-        const response = await axios.get(url);
-        const data = response.data.data || [];
-        res.json(data.slice(0, 3));
-    } catch (error) {
-        // No rompemos el servidor si falla instagram
-        console.error('Error Instagram');
-        res.json([]);
-    }
-});
-
-// --- INICIO DEL SERVIDOR ---
+// --- 5. EXTRAS ---
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
-// Servir frontend
+// Servir Frontend
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
 app.get('*.html', (req, res) => res.sendFile(path.join(__dirname, '../frontend', req.path)));
 
-// Manejo de errores global
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Error interno del servidor' });
-});
-
+// Iniciar Servidor
 initDB().then(() => {
     app.listen(PORT, () => {
-        console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
+        console.log(`✅ Servidor seguro corriendo en http://localhost:${PORT}`);
     });
 }).catch(err => {
-    console.error('❌ Error al iniciar la base de datos:', err);
+    console.error('❌ Error fatal:', err);
 });
