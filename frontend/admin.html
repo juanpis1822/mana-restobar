@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Maná Restobar</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="loginSection" class="login-section">
+        <div class="login-box">
+            <h1 style="color: var(--primary);">🔐 Panel Administrativo</h1>
+            <p style="color: #666; margin-bottom: 1.5rem;">Ingresa tus credenciales</p>
+            <div class="form-group">
+                <input type="password" id="passInput" placeholder="Contraseña" autofocus style="text-align: center; font-size: 1.2rem;">
+            </div>
+            <div class="login-buttons">
+                <button type="button" onclick="checkPassword()" class="btn btn-primary" style="flex: 1;">🔓 Ingresar</button>
+                <button type="button" onclick="goToHome()" class="btn btn-info" style="flex: 1;">← Inicio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardSection" class="container-admin" style="display: none;">
+        <div class="header-buttons">
+            <button onclick="goToHome()" class="btn btn-info">← Ir a Inicio</button>
+            <button onclick="logout()" class="btn btn-danger">🚪 Cerrar Sesión</button>
+        </div>
+
+        <h1>☕ Panel Administrativo - Maná Restobar</h1>
+
+        <div class="tab-list">
+            <button id="menuTabBtn" class="active" onclick="switchTab('menu')">📋 Menú</button>
+            <button id="addTabBtn" onclick="switchTab('add')">➕ Agregar Plato</button>
+            <button id="reservationsTabBtn" onclick="switchTab('reservations')">📅 Reservas</button>
+            <button id="controlTabBtn" onclick="switchTab('control')">⚙️ Configuración</button>
+        </div>
+
+        <div id="menuTab" style="display: block;">
+            <h2>📋 Platos Registrados</h2>
+            <table class="reservations-list" id="menuTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Nombre</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="menuTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="addTab" style="display: none;">
+            <h2>➕ Agregar Nuevo Plato</h2>
+            <form id="addDishForm" class="admin-form" onsubmit="submitAddDish(event)">
+                <div class="form-group">
+                    <label>Nombre del Plato</label>
+                    <input type="text" id="nameInput" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="categoryInput" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="Bebidas">Bebidas</option>
+                        <option value="Postres">Postres</option>
+                        <option value="Alimentos">Alimentos</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Precio</label>
+                    <input type="number" id="priceInput" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Imagen (Opcional)</label>
+                    <input type="file" id="imageInput" accept="image/*" style="padding: 0.4rem; background: #fff;">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="descInput" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">➕ Guardar Plato</button>
+            </form>
+        </div>
+
+        <div id="reservationsTab" style="display: none;">
+            <h2>📅 Reservas Recibidas</h2>
+            <div style="overflow-x: auto;">
+                <table class="reservations-list" id="reservationsTable">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Teléfono</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Pers.</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reservationsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="controlTab" style="display: none;">
+            <h2>⚙️ Configuración del Sistema</h2>
+
+            <div class="config-section" style="border-left: 5px solid var(--secondary);">
+                <h3 style="color: var(--secondary); margin-bottom: 1rem;">🔐 Seguridad de Acceso</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.9rem;">Contraseña Actual</label>
+                        <input type="password" id="currentAdminPassword" placeholder="Confirma tu clave actual">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.9rem;">Nueva Contraseña</label>
+                        <input type="password" id="newAdminPassword" placeholder="Escribe la nueva clave">
+                    </div>
+                    <button onclick="changeAdminPassword()" class="btn btn-primary" style="height: 42px;">Actualizar</button>
+                </div>
+                <p style="font-size: 0.85rem; color: #888; margin-top: 10px;">ℹ️ Necesitas ingresar tu clave actual para autorizar el cambio.</p>
+            </div>
+
+            <div class="config-section">
+                <h3>⏰ Horas Mínimas de Anticipación</h3>
+                <div class="form-group">
+                    <input type="number" id="minHoursInput" min="1" max="48">
+                </div>
+                <button onclick="saveMinHours()" class="btn btn-primary">💾 Guardar</button>
+            </div>
+
+            <div class="config-section">
+                <h3>👥 Capacidad Máxima</h3>
+                <div class="form-group">
+                    <input type="number" id="maxCapacityInput" min="1">
+                </div>
+                <button onclick="saveMaxCapacity()" class="btn btn-primary">💾 Guardar</button>
+            </div>
+
+            <div class="config-section">
+                <h3>🕐 Franjas Horarias</h3>
+                <div id="timeSlotsContainer"></div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Nueva Franja</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newTimeSlotInput" placeholder="Ej: 14:00-15:00">
+                        <button onclick="addTimeSlot()" class="btn btn-primary">➕</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reservaModal" class="modal">
+        <div class="modal-content">
+            <h2>📝 Detalles de la Reserva</h2>
+            <div id="reservaDetails"></div>
+            <button onclick="closeReservaModal()" class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;">Cerrar Ventana</button>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
