@@ -14,11 +14,7 @@
             <div class="logo" onclick="window.location.href='index.html'">
                 <img src="images/logo-brown.jpeg" alt="Maná Restobar" class="logo-img">
             </div>
-            
-            <div class="hamburger" id="hamburger">
-                <span></span><span></span><span></span>
-            </div>
-            
+            <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="index.html">Inicio</a></li>
                 <li><a href="menu.html">Menú</a></li>
@@ -38,7 +34,6 @@
             </div>
 
             <div class="reserva-wrapper">
-                
                 <div class="reserva-left">
                     <h2>1. Selecciona tus Platos</h2>
                     <div class="reserva-menu-grid" id="reservaMenuGrid">
@@ -47,7 +42,6 @@
                 </div>
 
                 <div class="reserva-right">
-                    
                     <div class="reserva-summary">
                         <h2>Resumen del Pedido</h2>
                         <div class="summary-items" id="summaryItems">
@@ -68,8 +62,7 @@
                                 <button type="button" class="calendar-btn" onclick="nextMonth()">▶</button>
                             </div>
                             <div class="calendar-weekdays">
-                                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div>
-                                <div>Jue</div><div>Vie</div><div>Sáb</div>
+                                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
                             </div>
                             <div class="calendar-days" id="calendarDays"></div>
                         </div>
@@ -86,22 +79,9 @@
                         <input type="hidden" id="selectedTimeSlot">
 
                         <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.2rem;">4. Tus Datos</h3>
-
-                        <div class="form-group">
-                            <label>Nombre Completo</label>
-                            <input type="text" id="name" placeholder="Ej: Juan Pérez" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Teléfono de Contacto</label>
-                            <input type="tel" id="phone" placeholder="Ej: 314 325 8525" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Número de Personas</label>
-                            <input type="number" id="guests" min="1" max="20" value="2" required>
-                        </div>
-
+                        <div class="form-group"><label>Nombre Completo</label><input type="text" id="name" placeholder="Ej: Juan Pérez" required></div>
+                        <div class="form-group"><label>Teléfono de Contacto</label><input type="tel" id="phone" placeholder="Ej: 314 325 8525" required></div>
+                        <div class="form-group"><label>Número de Personas</label><input type="number" id="guests" min="1" max="20" value="2" required></div>
                         <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Confirmar Reserva</button>
                     </form>
                 </div>
@@ -120,20 +100,15 @@
     </div>
 
     <footer class="footer">
-        <div class="footer-map-full">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3956.814802427139!2d-72.6471175889428!3d7.374643212655943!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e688153a8bf1953%3A0xb67c44d64f68830c!2sMana%20coffee!5e0!3m2!1ses!2sco!4v1764731111332!5m2!1ses!2sco" 
-                allowfullscreen="" 
-                loading="lazy" 
-                referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-        </div>
         <div class="footer-content">
             <h2 class="footer-main-title">CONTÁCTANOS</h2>
             <div class="footer-grid">
                 <div class="footer-column">
                     <h4>Dirección</h4>
                     <p>Cra 9 calle 5 esquina, local 2<br>Ursua, Pamplona<br>Norte de Santander</p>
+                    <div class="footer-map-small">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3955.0!2d-72.6!3d7.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zN8KwMjInMzAuMCJOIDcywrAzNycwMC4wIlc!5e0!3m2!1ses!2sco!4v1600000000000!5m2!1ses!2sco" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
                 </div>
                 <div class="footer-column">
                     <h4>Horarios</h4>
@@ -142,22 +117,14 @@
                 <div class="footer-column">
                     <h4>Teléfono</h4>
                     <p><a href="tel:+573150118386">315 011 8386</a></p>
-                    
+                   
                 </div>
                 <div class="footer-column">
                     <h4>Redes Sociales</h4>
                     <div class="footer-social-icons">
-                        <a href="https://www.instagram.com/mana_coffee_pam" target="_blank" title="Síguenos en Instagram">
-                            <i class="fa-brands fa-instagram"></i>
-                        </a>
-                        
-                        <a href="https://www.facebook.com/profile.php?id=61572704497545" target="_blank" title="Síguenos en Facebook">
-                            <i class="fa-brands fa-facebook-f"></i>
-                        </a>
-                        
-                        <a href="https://wa.me/573150118386" target="_blank" title="Escríbenos por WhatsApp">
-                            <i class="fa-brands fa-whatsapp"></i>
-                        </a>
+                        <a href="https://www.instagram.com/mana_coffee_pam" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/profile.php?id=61572704497545" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://wa.me/573150118386" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
                     </div>
                 </div>
             </div>
@@ -165,5 +132,8 @@
         <div class="footer-bottom"><p>© 2025 Maná Restobar. Todos los derechos reservados.</p></div>
     </footer>
 
-    <script src="js/main.js"></script>     <script src="js/calendar.js"></script> <script src="js/reserva.js"></script>  </body>
+    <script src="js/main.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/reserva.js"></script>
+</body>
 </html>
