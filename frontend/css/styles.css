@@ -477,7 +477,7 @@ button, input, select, textarea { font-family: inherit; }
 }
 .reserva-menu-item input:focus { background-color: #fff8e1; border-color: var(--primary); }
 
-/* Resumen */
+/* Resumen Lateral */
 .reserva-summary {
     background: #fafafa;
     padding: 1.5rem;
@@ -610,7 +610,7 @@ button, input, select, textarea { font-family: inherit; }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* ==========================================================================
-   9. FOOTER DARK (MAPA + REDES SOCIALES)
+   9. FOOTER DARK (MAPA PEQUEÑO + REDES)
    ========================================================================== */
 .footer {
     background-color: var(--footer-bg);
@@ -620,53 +620,90 @@ button, input, select, textarea { font-family: inherit; }
     overflow: hidden;
 }
 
-/* Mapa */
-.footer-map-full {
-    width: 100%; height: 350px;
-    border-bottom: 4px solid var(--footer-accent);
-    background: #222;
+/* Contenido Principal */
+.footer-content {
+    padding: 3rem 20px 2rem;
+    background: var(--footer-bg);
 }
-.footer-map-full iframe {
-    width: 100%; height: 100%; border: 0;
-    filter: grayscale(100%) invert(90%) contrast(0.9);
-    transition: filter 0.5s ease;
-}
-.footer-map-full iframe:hover { filter: none; }
-
-/* Contenido */
-.footer-content { padding: 4rem 20px 2rem; background: var(--footer-bg); }
 
 .footer-main-title {
     color: var(--footer-accent);
-    font-size: 3rem; font-weight: 900; text-align: center;
-    margin-bottom: 4rem; text-transform: uppercase; letter-spacing: 3px;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 3rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
     text-shadow: 0 2px 10px rgba(243, 156, 18, 0.2);
 }
 
+/* Grilla de Columnas */
 .footer-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 3rem; max-width: 1200px; margin: 0 auto; text-align: left;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: left;
+    align-items: start;
 }
 
+/* Títulos de Columna */
 .footer-column h4 {
-    color: var(--white); font-size: 1.1rem; margin-bottom: 1.5rem;
-    border-bottom: 2px solid #333; padding-bottom: 0.5rem;
-    display: inline-block; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--white);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #333;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-.footer-column p, .footer-column li, .footer-column a {
-    color: var(--footer-accent); font-size: 1rem; line-height: 1.8;
-    margin-bottom: 0.5rem; list-style: none; text-decoration: none;
-    font-weight: 500; display: block; transition: 0.2s;
+/* Textos y Enlaces */
+.footer-column p, 
+.footer-column li, 
+.footer-column a {
+    color: var(--footer-accent);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+    list-style: none;
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+    transition: 0.2s;
 }
+
 .footer-column a:hover { color: var(--white); padding-left: 5px; }
 .footer-column ul { padding: 0; }
 
-/* --- ICONOS REDES SOCIALES (MEJORADOS) --- */
+/* --- MAPA PEQUEÑO (CUADRO) --- */
+.footer-map-small {
+    width: 100%;
+    height: 180px;
+    margin-top: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #333;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.footer-map-small iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    filter: grayscale(100%) invert(90%) contrast(0.9);
+    transition: filter 0.3s;
+}
+
+.footer-map-small iframe:hover { filter: none; }
+
+/* --- ICONOS REDES SOCIALES (CIRCULARES) --- */
 .footer-social-icons {
     display: flex;
     gap: 15px;
-    margin-top: 15px;
+    margin-top: 10px;
 }
 
 .footer-social-icons a {
@@ -693,15 +730,19 @@ button, input, select, textarea { font-family: inherit; }
 }
 
 .footer-bottom {
-    background: #000; padding: 2rem; text-align: center;
-    color: #666; font-size: 0.9rem; border-top: 1px solid #222;
+    background: #000;
+    padding: 1.5rem;
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    border-top: 1px solid #222;
 }
 
 /* ==========================================================================
    10. MEDIA QUERIES (RESPONSIVE)
    ========================================================================== */
 
-/* TABLETS */
+/* TABLETS (<= 768px) */
 @media (max-width: 768px) {
     .navbar { height: 100px; }
     .hamburger { display: flex; }
@@ -724,10 +765,11 @@ button, input, select, textarea { font-family: inherit; }
     .footer-social-icons { justify-content: center; }
 }
 
-/* MÓVILES */
+/* MÓVILES (<= 480px) */
 @media (max-width: 480px) {
     html { font-size: 15px; }
     .container { padding: 0 15px; }
+    
     .navbar { height: 80px; }
     .nav-menu { top: 80px; }
     .logo-img { height: 70px; width: 70px; }
@@ -740,7 +782,8 @@ button, input, select, textarea { font-family: inherit; }
     .menu-grid { grid-template-columns: 1fr; }
     .reserva-menu-grid { grid-template-columns: 1fr; }
     
-    .footer-map-full { height: 200px; }
     .footer-main-title { font-size: 1.8rem; }
     .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+    
+    .login-box { padding: 2rem 1.5rem; }
 }
