@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Maná Restobar</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
@@ -13,11 +12,9 @@
         <div class="login-box">
             <h1 style="color: var(--primary);">🔐 Panel Administrativo</h1>
             <p style="color: #666; margin-bottom: 1.5rem;">Ingresa tus credenciales</p>
-            
             <div class="form-group">
                 <input type="password" id="passInput" placeholder="Contraseña" autofocus style="text-align: center; font-size: 1.2rem;">
             </div>
-
             <div class="login-buttons">
                 <button type="button" onclick="checkPassword()" class="btn btn-primary" style="flex: 1;">🔓 Ingresar</button>
                 <button type="button" onclick="goToHome()" class="btn btn-info" style="flex: 1;">← Inicio</button>
@@ -27,6 +24,7 @@
 
     <div id="dashboardSection" class="container-admin" style="display: none;">
         <div class="header-buttons">
+            <button onclick="goToHome()" class="btn btn-info">← Ir a Inicio</button>
             <button onclick="logout()" class="btn btn-danger">🚪 Cerrar Sesión</button>
         </div>
 
@@ -43,12 +41,7 @@
             <h2>📋 Platos Registrados</h2>
             <table class="reservations-list" id="menuTable">
                 <thead>
-                    <tr>
-                        <th style="width: 40%;">Nombre</th>
-                        <th>Categoría</th>
-                        <th>Precio</th>
-                        <th>Acciones</th>
-                    </tr>
+                    <tr><th style="width: 40%;">Nombre</th><th>Categoría</th><th>Precio</th><th>Acciones</th></tr>
                 </thead>
                 <tbody id="menuTableBody"></tbody>
             </table>
@@ -59,35 +52,35 @@
             <form id="addDishForm" class="admin-form" onsubmit="submitAddDish(event)">
                 <div class="form-group">
                     <label>Nombre del Plato</label>
-                    <input type="text" id="nameInput" placeholder="Ej: Cappuccino Especial" required>
+                    <input type="text" id="nameInput" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Categoría</label>
                     <select id="categoryInput" required>
                         <option value="">Seleccionar...</option>
+                        <option value="Comida Rápida">Comida Rápida</option>
+                        <option value="Platos a la Carta">Platos a la Carta</option>
+                        <option value="Cafetería">Cafetería</option>
+                        <option value="Repostería">Repostería</option>
+                        <option value="Malteadas">Malteadas</option>
                         <option value="Bebidas">Bebidas</option>
-                        <option value="Postres">Postres</option>
-                        <option value="Alimentos">Alimentos</option>
+                        <option value="Cocteles">Cocteles</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label>Precio</label>
-                    <input type="number" id="priceInput" min="0" placeholder="Ej: 5000" required>
+                    <input type="number" id="priceInput" min="0" required>
                 </div>
-
                 <div class="form-group">
-                    <label>Imagen del Plato (Opcional)</label>
+                    <label>Imagen (Opcional)</label>
                     <input type="file" id="imageInput" accept="image/*" style="padding: 0.4rem; background: #fff;">
-                    <small style="color: var(--text-muted);">📸 Se recomienda una imagen horizontal.</small>
                 </div>
-
                 <div class="form-group">
                     <label>Descripción</label>
                     <textarea id="descInput" rows="3"></textarea>
                 </div>
-                
                 <button type="submit" class="btn btn-primary btn-block">➕ Guardar Plato</button>
             </form>
         </div>
@@ -97,15 +90,7 @@
             <div style="overflow-x: auto;">
                 <table class="reservations-list" id="reservationsTable">
                     <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Teléfono</th>
-                            <th>Fecha</th>
-                            <th>Hora</th>
-                            <th>Pers.</th>
-                            <th>Total</th>
-                            <th>Acciones</th>
-                        </tr>
+                        <tr><th>Cliente</th><th>Teléfono</th><th>Fecha</th><th>Hora</th><th>Pers.</th><th>Total</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="reservationsTableBody"></tbody>
                 </table>
@@ -114,10 +99,8 @@
 
         <div id="controlTab" style="display: none;">
             <h2>⚙️ Configuración del Sistema</h2>
-
             <div class="config-section" style="border-left: 5px solid var(--secondary);">
                 <h3 style="color: var(--secondary); margin-bottom: 1rem;">🔐 Seguridad de Acceso</h3>
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label style="font-size: 0.9rem;">Contraseña Actual</label>
@@ -129,27 +112,17 @@
                     </div>
                     <button onclick="changeAdminPassword()" class="btn btn-primary" style="height: 42px;">Actualizar</button>
                 </div>
-                <p style="font-size: 0.85rem; color: #888; margin-top: 10px;">
-                    ℹ️ Necesitas ingresar tu clave actual para autorizar el cambio.
-                </p>
             </div>
-
             <div class="config-section">
-                <h3>⏰ Horas Mínimas de Anticipación</h3>
-                <div class="form-group">
-                    <input type="number" id="minHoursInput" min="1" max="48">
-                </div>
+                <h3>⏰ Horas Mínimas</h3>
+                <div class="form-group"><input type="number" id="minHoursInput" min="1" max="48"></div>
                 <button onclick="saveMinHours()" class="btn btn-primary">💾 Guardar</button>
             </div>
-
             <div class="config-section">
                 <h3>👥 Capacidad Máxima</h3>
-                <div class="form-group">
-                    <input type="number" id="maxCapacityInput" min="1">
-                </div>
+                <div class="form-group"><input type="number" id="maxCapacityInput" min="1"></div>
                 <button onclick="saveMaxCapacity()" class="btn btn-primary">💾 Guardar</button>
             </div>
-
             <div class="config-section">
                 <h3>🕐 Franjas Horarias</h3>
                 <div id="timeSlotsContainer"></div>
