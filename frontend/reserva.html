@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservas - Maná Restobar</title>
+    <title>Pedidos y Reservas - Maná Restobar</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -19,7 +19,7 @@
                 <li><a href="index.html">Inicio</a></li>
                 <li><a href="nosotros.html">Nosotros</a></li>
                 <li><a href="menu.html">Menú</a></li>
-                <li><a href="reserva.html" class="active">Reservas</a></li>
+                <li><a href="reserva.html" class="active">Reservas/Domicilios</a></li>
                 <li><a href="admin.html">Admin</a></li>
             </ul>
         </div>
@@ -27,11 +27,26 @@
 
     <main class="reserva-page">
         <div class="container">
-            <h1 class="section-title">Haz tu Reserva</h1>
+            <h1 class="section-title">¿Qué deseas hacer hoy?</h1>
 
-            <div id="minHoursWarning" class="min-hours-warning">
+            <div class="order-type-selector">
+                <button type="button" class="type-btn active" onclick="setOrderType('reserva')">
+                    <i class="fa-solid fa-chair"></i> Reservar Mesa
+                </button>
+                <button type="button" class="type-btn" onclick="setOrderType('domicilio')">
+                    <i class="fa-solid fa-motorcycle"></i> Pedir Domicilio
+                </button>
+            </div>
+
+            <div id="minHoursWarning" class="min-hours-warning" style="display:block;">
                 <strong>⏰ Información Importante</strong>
                 <span id="warningText"></span>
+            </div>
+
+            <div id="deliveryWarning" class="min-hours-warning" style="display:none; background-color: #e3f2fd; border-color: #90caf9; color: #0d47a1;">
+                <strong>🛵 Información de Domicilio</strong><br>
+                Se cobrará un adicional de <strong>$1.000</strong> por empaques.<br>
+                <em>El costo del domicilio varía según la distancia y se acuerda por WhatsApp.</em>
             </div>
 
             <div class="reserva-wrapper">
@@ -48,42 +63,72 @@
                         <div class="summary-items" id="summaryItems">
                             <p class="empty-msg" style="text-align: center; color: #999;">Ningún plato seleccionado</p>
                         </div>
+                        
+                        <div id="packagingCostRow" style="display:none; justify-content: space-between; padding: 0.5rem 0; border-top: 1px dashed #ccc; color: #666;">
+                            <span>Empaques (Icopor)</span>
+                            <strong>$1.000</strong>
+                        </div>
+
                         <div class="summary-total">
                             <strong>TOTAL ESTIMADO</strong>
                             <span id="totalPrice">$0</span>
                         </div>
                     </div>
 
-                    <div class="calendar-section">
-                        <h2>2. Selecciona Fecha</h2>
-                        <div class="calendar-container">
-                            <div class="calendar-nav">
-                                <button type="button" class="calendar-btn" onclick="prevMonth()">◀</button>
-                                <h3 id="currentMonth"></h3>
-                                <button type="button" class="calendar-btn" onclick="nextMonth()">▶</button>
+                    <div id="dateTimeSection">
+                        <div class="calendar-section">
+                            <h2>2. Selecciona Fecha</h2>
+                            <div class="calendar-container">
+                                <div class="calendar-nav">
+                                    <button type="button" class="calendar-btn" onclick="prevMonth()">◀</button>
+                                    <h3 id="currentMonth"></h3>
+                                    <button type="button" class="calendar-btn" onclick="nextMonth()">▶</button>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                                </div>
+                                <div class="calendar-days" id="calendarDays"></div>
                             </div>
-                            <div class="calendar-weekdays">
-                                <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
-                            </div>
-                            <div class="calendar-days" id="calendarDays"></div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.2rem;">3. Selecciona Hora</h3>
-                        <div class="capacity-warning" id="capacityWarning"></div>
-                        <div class="time-slots-container" id="timeSlotsContainer"></div>
+                        <div class="form-group">
+                            <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.2rem;">3. Selecciona Hora</h3>
+                            <div class="capacity-warning" id="capacityWarning"></div>
+                            <div class="time-slots-container" id="timeSlotsContainer"></div>
+                        </div>
                     </div>
 
                     <form id="reservationForm" class="reserva-form">
                         <input type="hidden" id="reservationDate">
                         <input type="hidden" id="selectedTimeSlot">
+                        
+                        <input type="hidden" id="orderType" value="reserva">
 
-                        <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.2rem;">4. Tus Datos</h3>
-                        <div class="form-group"><label>Nombre Completo</label><input type="text" id="name" placeholder="Ej: Juan Pérez" required></div>
-                        <div class="form-group"><label>Teléfono de Contacto</label><input type="tel" id="phone" placeholder="Ej: 314 325 8525" required></div>
-                        <div class="form-group"><label>Número de Personas</label><input type="number" id="guests" min="1" max="20" value="2" required></div>
-                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;">Confirmar Reserva</button>
+                        <h3 style="color: var(--primary); margin-bottom: 1rem; font-size: 1.2rem;">
+                            <span id="stepNumber">4</span>. Tus Datos
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="name" placeholder="Ej: Juan Pérez" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Teléfono de Contacto</label>
+                            <input type="tel" id="phone" placeholder="Ej: 314 325 8525" required>
+                        </div>
+
+                        <div class="form-group" id="addressGroup" style="display: none;">
+                            <label>Dirección de Entrega</label>
+                            <textarea id="address" rows="2" placeholder="Ej: Calle 5 #4-20, Casa blanca, segundo piso."></textarea>
+                        </div>
+
+                        <div class="form-group" id="guestsGroup">
+                            <label>Número de Personas</label>
+                            <input type="number" id="guests" min="1" max="20" value="2">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;" id="submitBtn">Confirmar Reserva</button>
                     </form>
                 </div>
             </div>
@@ -93,10 +138,10 @@
     <div id="confirmationModal" class="modal">
         <div class="modal-content">
             <div class="modal-icon" style="font-size: 4rem;">✅</div>
-            <h2>¡Reserva Confirmada!</h2>
-            <p>Te esperamos con los brazos abiertos.</p>
+            <h2 id="modalTitle">¡Listo!</h2>
+            <p id="modalSubtitle">Finaliza el proceso en WhatsApp.</p>
             <div id="confirmationMessage"></div>
-            <button type="button" class="btn btn-primary" onclick="closeModal()" style="margin-top: 1.5rem; width: 100%;">Aceptar</button>
+            <button type="button" class="btn btn-primary" onclick="closeModal()" style="margin-top: 1.5rem; width: 100%;">Cerrar</button>
         </div>
     </div>
 
