@@ -2,28 +2,11 @@
    1. VARIABLES GLOBALES Y CONFIGURACIÓN (ROOT)
    ========================================================================== */
 :root {
-    /* --- IDENTIDAD DE MARCA (MANÁ RESTOBAR) --- */
-    --primary: #5D4037;    /* Café oscuro (Textos principales, bordes) */
-    --secondary: #8D6E63;  /* Bronce/Canela (Botones, acentos) */
-    --dark: #3E2723;       /* Café casi negro (Contrastes, degradados) */
-    --light: #FDF5E6;      /* Crema suave (Fondo general) */
-    --white: #ffffff;      /* Blanco puro */
-    
-    /* --- TEXTOS --- */
-    --text-main: #333333;
-    --text-muted: #666666;
-
-    /* --- ESTADOS DE INTERFAZ (UI) --- */
-    --success: #27ae60;    /* Verde (Éxito) */
-    --danger: #e74c3c;     /* Rojo (Error/Borrar) */
-    --warning: #f1c40f;    /* Amarillo (Alertas) */
-    --info: #3498db;       /* Azul (Info) */
-
-    /* --- FOOTER DARK --- */
-    --footer-bg: #111111;
-    --footer-accent: #F39C12; /* Naranja dorado */
-
-    /* --- UTILIDADES --- */
+    --primary: #5D4037; --secondary: #8D6E63; --dark: #3E2723;
+    --light: #FDF5E6; --white: #ffffff;
+    --text-main: #333333; --text-muted: #666666;
+    --success: #27ae60; --danger: #e74c3c; --warning: #f1c40f; --info: #3498db;
+    --footer-bg: #111111; --footer-accent: #F39C12;
     --radius: 8px;
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
     --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
@@ -37,8 +20,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { width: 100%; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--light); color: var(--text-main); line-height: 1.6; display: flex; flex-direction: column; }
-ul { list-style: none; }
-a { text-decoration: none; }
+ul { list-style: none; } a { text-decoration: none; }
 button, input, select, textarea { font-family: inherit; }
 .container { max-width: 1200px; width: 100%; margin: 0 auto; padding: 0 20px; }
 .section-title { font-size: 2.5rem; text-align: center; color: var(--primary); margin: 3rem 0; font-weight: 800; }
@@ -46,7 +28,7 @@ button, input, select, textarea { font-family: inherit; }
 .reveal.active { opacity: 1; transform: translateY(0); }
 
 /* ==========================================================================
-   3. COMPONENTES (BOTONES, FORMULARIOS)
+   3. COMPONENTES
    ========================================================================== */
 .btn { display: inline-block; padding: 0.85rem 1.8rem; border-radius: var(--radius); border: none; cursor: pointer; font-weight: 700; text-align: center; transition: var(--transition); font-size: 1rem; }
 .btn:active { transform: scale(0.98); }
@@ -55,19 +37,17 @@ button, input, select, textarea { font-family: inherit; }
 .btn-secondary { background: transparent; border: 2px solid var(--white); color: var(--white); }
 .btn-secondary:hover { background: var(--white); color: var(--primary); }
 .btn-danger { background: var(--danger); color: var(--white); }
-.btn-danger:hover { background: #c0392b; }
 .btn-info { background: var(--info); color: var(--white); }
-.btn-info:hover { background: #2980b9; }
 .btn-block { width: 100%; display: block; }
 .btn-sm { padding: 0.4rem 1rem; font-size: 0.85rem; }
 
 .form-group { margin-bottom: 1.2rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--primary); }
 .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.8rem; border: 2px solid #ddd; border-radius: var(--radius); font-size: 1rem; transition: border-color 0.3s; background: var(--white); }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(93, 64, 55, 0.1); }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(93, 64, 55, 0.1); }
 
 /* ==========================================================================
-   4. BARRA DE NAVEGACIÓN (NAVBAR)
+   4. NAVBAR
    ========================================================================== */
 .navbar { background-color: var(--light); border-bottom: 4px solid var(--primary); box-shadow: 0 5px 15px rgba(93, 64, 55, 0.2); position: sticky; top: 0; z-index: 1000; width: 100%; height: 135px; transition: height 0.3s ease; }
 .nav-container { display: flex; justify-content: space-between; align-items: center; height: 100%; padding: 0 20px; max-width: 1200px; margin: 0 auto; }
@@ -81,7 +61,7 @@ button, input, select, textarea { font-family: inherit; }
 .hamburger span { width: 30px; height: 3px; background: var(--primary); border-radius: 2px; transition: var(--transition); }
 
 /* ==========================================================================
-   5. SECCIONES DE INICIO
+   5. INICIO
    ========================================================================== */
 .hero-slider { position: relative; width: 100%; height: 600px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: var(--dark); }
 .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1s ease-in-out; background-size: cover; background-position: center; }
@@ -92,7 +72,6 @@ button, input, select, textarea { font-family: inherit; }
 .hero-title { font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--white); text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 .hero-subtitle { font-size: 1.5rem; margin-bottom: 2.5rem; color: #f0f0f0; font-weight: 400; }
 .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-
 .features { padding: 5rem 0; background: var(--white); }
 .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; }
 .feature-card { background: var(--light); padding: 2.5rem 2rem; border-radius: 12px; text-align: center; border: 1px solid rgba(141, 110, 99, 0.1); transition: var(--transition); }
@@ -102,7 +81,7 @@ button, input, select, textarea { font-family: inherit; }
 .feature-card p { color: var(--text-muted); }
 
 /* ==========================================================================
-   6. PÁGINA MENÚ
+   6. MENÚ
    ========================================================================== */
 .menu-page { padding: 3rem 0; min-height: 60vh; }
 .menu-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 3rem; }
@@ -122,7 +101,7 @@ button, input, select, textarea { font-family: inherit; }
 .menu-cta { background: linear-gradient(135deg, var(--primary), var(--dark)); color: var(--white); padding: 4rem 2rem; border-radius: 12px; text-align: center; margin-top: 4rem; box-shadow: 0 10px 30px rgba(62, 39, 35, 0.3); }
 
 /* ==========================================================================
-   7. PÁGINA RESERVAS
+   7. RESERVAS
    ========================================================================== */
 .reserva-page { padding: 3rem 0; }
 .reserva-wrapper { display: grid; grid-template-columns: 2fr 1fr; gap: 2.5rem; align-items: start; }
@@ -160,7 +139,7 @@ button, input, select, textarea { font-family: inherit; }
 .reserva-form { background: var(--white); padding: 1.5rem; border-radius: 12px; }
 
 /* ==========================================================================
-   8. PANEL DE ADMINISTRACIÓN
+   8. ADMIN
    ========================================================================== */
 .login-section { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; z-index: 2000; }
 .login-box { background: var(--white); padding: 3rem; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
@@ -182,7 +161,7 @@ button, input, select, textarea { font-family: inherit; }
 .modal-content { background: var(--white); padding: 2.5rem; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-width: 500px; width: 90%; animation: slideUp 0.3s ease; }
 
 /* ==========================================================================
-   9. FOOTER DARK
+   9. FOOTER
    ========================================================================== */
 .footer { background-color: var(--footer-bg); color: var(--white); margin-top: auto; border-top: 5px solid var(--primary); overflow: hidden; }
 .footer-content { padding: 3rem 20px 2rem; background: var(--footer-bg); }
