@@ -114,7 +114,7 @@ async function checkSlotCapacity(dateStr, timeSlot) {
 }
 
 // =========================================================
-// 3. MENÚ Y SELECCIÓN DE PLATOS (¡ACTUALIZADO!)
+// 3. MENÚ Y SELECCIÓN DE PLATOS
 // =========================================================
 async function renderMenuForReservation() {
     try {
@@ -129,7 +129,6 @@ async function renderMenuForReservation() {
             return;
         }
 
-        // AQUÍ ESTÁ LA ACTUALIZACIÓN: Usamos las clases del CSS nuevo
         grid.innerHTML = allDishes.map(m => `
             <div class="reserva-menu-item">
                 <div class="reserva-menu-item-icon">
@@ -240,7 +239,10 @@ async function handleReservationSubmit(e) {
         const result = await response.json();
 
         if (response.ok) {
+            // AQUÍ LLAMAMOS AL MODAL CON LOS DATOS DE WHATSAPP
             showSuccessModal(reservationData);
+            
+            // Limpiar formulario
             document.getElementById('reservationForm').reset();
             selectedItems = {};
             updateReservationSummary();
@@ -258,21 +260,51 @@ async function handleReservationSubmit(e) {
 }
 
 // =========================================================
-// 5. MODAL DE CONFIRMACIÓN
+// 5. MODAL DE CONFIRMACIÓN Y WHATSAPP
 // =========================================================
 function showSuccessModal(res) {
     const modal = document.getElementById('confirmationModal');
     const msg = document.getElementById('confirmationMessage');
     
+    // 1. Crear la lista de platos para el mensaje
+    let platosTexto = "";
+    res.items.forEach(item => {
+        platosTexto += `- ${item.qty}x ${item.name}\n`;
+    });
+
+    // 2. Construir el mensaje de WhatsApp
+    const whatsappMessage = 
+`Hola Maná Restobar! ☕ Quiero confirmar mi reserva:
+
+👤 *Nombre:* ${res.name}
+📅 *Fecha:* ${res.date}
+⏰ *Hora:* ${res.timeSlot}
+👥 *Personas:* ${res.guests}
+
+🍽️ *Pedido:*
+${platosTexto}
+💰 *Total Aprox:* $${res.total.toLocaleString('es-CO')}
+
+¿Quedo atento a su confirmación!`;
+
+    // 3. Crear el enlace (Tu número: 573143258525)
+    const whatsappLink = `https://wa.me/573143258525?text=${encodeURIComponent(whatsappMessage)}`;
+
+    // 4. Mostrar en el Modal con el Botón Verde
     msg.innerHTML = `
         <div style="text-align: left; margin-top: 1rem;">
-            <p><strong>Titular:</strong> ${res.name}</p>
-            <p><strong>Fecha:</strong> ${res.date}</p>
-            <p><strong>Hora:</strong> ${res.timeSlot}</p>
-            <p><strong>Mesa para:</strong> ${res.guests} personas</p>
-            <p style="font-size: 1.2rem; color: var(--primary); margin-top: 10px;">
-                <strong>Total estimado: $${res.total.toLocaleString('es-CO')}</strong>
-            </p>
+            <p><strong>Reserva Guardada en el Sistema ✅</strong></p>
+            <p>Ahora envíanos los detalles por WhatsApp para confirmar tu mesa.</p>
+            
+            <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 0.9rem; color: #555;">
+                <strong>Resumen:</strong><br>
+                ${res.date} - ${res.timeSlot}<br>
+                ${res.guests} personas • $${res.total.toLocaleString('es-CO')}
+            </div>
+
+            <a href="${whatsappLink}" target="_blank" class="btn" style="background-color: #25D366; color: white; display: block; text-align: center; text-decoration: none; margin-top: 15px; font-weight: bold; border: none;">
+                <i class="fa-brands fa-whatsapp"></i> Enviar a WhatsApp
+            </a>
         </div>
     `;
     modal.style.display = 'flex';
