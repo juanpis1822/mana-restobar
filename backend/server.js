@@ -29,7 +29,6 @@ const initDB = () => new Promise((resolve, reject) => {
         if (err) { console.error('Error BD:', err); reject(err); }
         else { 
             console.log('✅ Conectado a SQLite');
-            // Ejecutamos migraciones y luego creamos tablas si faltan
             fixDatabaseStructure().then(() => {
                 createTables().then(resolve).catch(reject);
             });
@@ -59,14 +58,12 @@ const allAsync = (sql, params = []) => new Promise((resolve, reject) => {
     });
 });
 
-// --- AUTO-REPARACIÓN (FIX PARA EL ERROR "NO SUCH COLUMN: TOKEN") ---
+// Auto-Reparación
 const fixDatabaseStructure = () => new Promise((resolve) => {
     console.log('🔄 Verificando estructura de la base de datos...');
-    
-    // Intenta agregar la columna token. Si ya existe, dará error pero no importa, seguimos.
     db.run("ALTER TABLE admin ADD COLUMN token TEXT", (err) => {
         if (!err) console.log("✨ Columna 'token' agregada exitosamente.");
-        resolve(); // Continuamos siempre
+        resolve(); 
     });
 });
 
@@ -75,29 +72,22 @@ const createTables = () => new Promise((resolve, reject) => {
     db.serialize(() => {
         db.run(`CREATE TABLE IF NOT EXISTS dishes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, price INTEGER, description TEXT, image LONGTEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`);
         db.run(`CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, date TEXT, timeSlot TEXT, guests INTEGER, items TEXT, total INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-        
-        // Tabla Admin (con token)
         db.run(`CREATE TABLE IF NOT EXISTS admin (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, token TEXT)`);
-        
         db.run(`CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE, value TEXT)`);
-
-        // Datos por defecto
+        
         db.run(`INSERT OR IGNORE INTO admin (username, password) VALUES (?, ?)`, ['admin', '1234']);
         db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['minHours', '8']);
         db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['maxCapacity', '30']);
         db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['timeSlots', '["12:00-13:00", "13:00-14:00", "18:00-19:00", "19:00-20:00"]']);
-
         resolve();
     });
 });
 
-// --- MIDDLEWARE DE SEGURIDAD ---
+// Middleware Seguridad
 const requireAuth = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-
     if (!token) return res.status(401).json({ error: 'No autorizado' });
-
     try {
         const admin = await getAsync('SELECT * FROM admin WHERE token = ?', [token]);
         if (!admin) return res.status(403).json({ error: 'Sesión expirada' });
@@ -109,22 +99,18 @@ const requireAuth = async (req, res, next) => {
 
 // --- RUTAS API ---
 
-// Login
+// Login & Logout
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
         const admin = await getAsync('SELECT * FROM admin WHERE username = ? AND password = ?', [username, password]);
-        
         if (!admin) return res.status(401).json({ error: 'Credenciales inválidas' });
-
         const token = crypto.randomBytes(32).toString('hex');
         await runAsync('UPDATE admin SET token = ? WHERE username = ?', [token, username]);
-
         res.json({ message: 'OK', token: token });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Logout
 app.post('/api/admin/logout', async (req, res) => {
     try {
         await runAsync('UPDATE admin SET token = NULL');
@@ -132,27 +118,34 @@ app.post('/api/admin/logout', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Cambiar Password (Protegido)
 app.put('/api/admin/password', requireAuth, async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         const admin = await getAsync('SELECT * FROM admin WHERE username = ?', ['admin']);
-        
-        if (admin.password !== currentPassword) {
-            return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
-        }
-
+        if (admin.password !== currentPassword) return res.status(401).json({ error: 'Clave actual incorrecta' });
         await runAsync('UPDATE admin SET password = ? WHERE username = ?', [newPassword, 'admin']);
         res.json({ message: 'Contraseña actualizada' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Platos
+// --- PLATOS (DISHES) ---
+
+// Ver todos
 app.get('/api/dishes', async (req, res) => {
     try { const r = await allAsync('SELECT * FROM dishes ORDER BY id DESC'); res.json(r); } 
     catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Ver uno solo (Para editar)
+app.get('/api/dishes/:id', async (req, res) => {
+    try {
+        const r = await getAsync('SELECT * FROM dishes WHERE id = ?', [req.params.id]);
+        if (!r) return res.status(404).json({ error: 'Plato no encontrado' });
+        res.json(r);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Crear plato
 app.post('/api/dishes', requireAuth, async (req, res) => {
     try {
         const { name, category, price, description, image } = req.body;
@@ -161,12 +154,31 @@ app.post('/api/dishes', requireAuth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// EDITAR PLATO (NUEVO)
+app.put('/api/dishes/:id', requireAuth, async (req, res) => {
+    try {
+        const { name, category, price, description, image } = req.body;
+        const id = req.params.id;
+
+        // Si viene imagen nueva, actualizamos todo. Si no, mantenemos la imagen vieja.
+        if (image) {
+            await runAsync('UPDATE dishes SET name=?, category=?, price=?, description=?, image=? WHERE id=?', 
+                [name, category, price, description, image, id]);
+        } else {
+            await runAsync('UPDATE dishes SET name=?, category=?, price=?, description=? WHERE id=?', 
+                [name, category, price, description, id]);
+        }
+        res.json({ message: 'Actualizado correctamente' });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Borrar plato
 app.delete('/api/dishes/:id', requireAuth, async (req, res) => {
     try { await runAsync('DELETE FROM dishes WHERE id = ?', [req.params.id]); res.json({ message: 'Eliminado' }); }
     catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Reservas
+// --- RESERVAS ---
 app.get('/api/reservations', requireAuth, async (req, res) => {
     try {
         const r = await allAsync('SELECT * FROM reservations ORDER BY date DESC');
@@ -202,7 +214,7 @@ app.delete('/api/reservations/:id', requireAuth, async (req, res) => {
     catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Config
+// --- CONFIG ---
 app.get('/api/config', async (req, res) => {
     const configs = await allAsync('SELECT * FROM config');
     const r = {}; configs.forEach(c => { try{r[c.key]=JSON.parse(c.value)}catch{r[c.key]=c.value} });
@@ -215,7 +227,7 @@ app.put('/api/config/:key', requireAuth, async (req, res) => {
     res.json({ message: 'Guardado' });
 });
 
-// Instagram (Opcional)
+// --- EXTRAS ---
 app.get('/api/instagram', async (req, res) => {
     try {
         const token = process.env.INSTAGRAM_ACCESS_TOKEN;
@@ -230,11 +242,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
 app.get('*.html', (req, res) => res.sendFile(path.join(__dirname, '../frontend', req.path)));
 
-// Servidor
+// Inicio
 initDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`✅ Servidor corriendo en http://localhost:${PORT}`);
-    });
-}).catch(err => {
-    console.error('❌ Error fatal:', err);
-});
+    app.listen(PORT, () => console.log(`✅ Servidor corriendo en http://localhost:${PORT}`));
+}).catch(err => console.error('❌ Error fatal:', err));
