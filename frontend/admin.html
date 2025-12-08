@@ -33,7 +33,7 @@
 
         <div class="tab-list">
             <button id="menuTabBtn" class="active" onclick="switchTab('menu')">📋 Menú</button>
-            <button id="addTabBtn" onclick="switchTab('add')">➕ Agregar Plato</button>
+            <button id="addTabBtn" onclick="switchTab('add')">➕ Gestionar Platos</button>
             <button id="reservationsTabBtn" onclick="switchTab('reservations')">📅 Reservas</button>
             <button id="controlTabBtn" onclick="switchTab('control')">⚙️ Configuración</button>
         </div>
@@ -49,8 +49,11 @@
         </div>
 
         <div id="addTab" style="display: none;">
-            <h2>➕ Agregar Nuevo Plato</h2>
+            <h2 id="formTitle">➕ Agregar Nuevo Plato</h2>
+            
             <form id="addDishForm" class="admin-form" onsubmit="submitAddDish(event)">
+                <input type="hidden" id="editDishId">
+
                 <div class="form-group">
                     <label>Nombre del Plato</label>
                     <input type="text" id="nameInput" required>
@@ -77,12 +80,17 @@
                 <div class="form-group">
                     <label>Imagen (Opcional)</label>
                     <input type="file" id="imageInput" accept="image/*" style="padding: 0.4rem; background: #fff;">
+                    <small id="imageHint" style="color: #666; display: none;">Dejar vacío para mantener la imagen actual.</small>
                 </div>
                 <div class="form-group">
                     <label>Descripción</label>
                     <textarea id="descInput" rows="3"></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">➕ Guardar Plato</button>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" id="submitBtn" class="btn btn-primary btn-block">💾 Guardar Plato</button>
+                    <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="btn btn-danger" style="display: none;">Cancelar</button>
+                </div>
             </form>
         </div>
 
