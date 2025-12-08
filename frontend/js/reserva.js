@@ -260,7 +260,7 @@ async function handleReservationSubmit(e) {
 }
 
 // =========================================================
-// 5. MODAL DE CONFIRMACIÓN Y WHATSAPP
+// 5. MODAL DE CONFIRMACIÓN Y WHATSAPP (CORREGIDO)
 // =========================================================
 function showSuccessModal(res) {
     const modal = document.getElementById('confirmationModal');
@@ -269,26 +269,23 @@ function showSuccessModal(res) {
     // 1. Crear la lista de platos para el mensaje
     let platosTexto = "";
     res.items.forEach(item => {
-        platosTexto += `- ${item.qty}x ${item.name}\n`;
+        platosTexto += "▪ " + item.qty + "x " + item.name + "\n";
     });
 
-    // 2. Construir el mensaje de WhatsApp
-    const whatsappMessage = 
-`Hola Maná Restobar! ☕ Quiero confirmar mi reserva:
+    // 2. Construir el mensaje de WhatsApp (USANDO SALTOS DE LÍNEA EXPLÍCITOS Y CARACTERES SIMPLES)
+    // El formato %0A asegura el salto de línea en la URL
+    let whatsappMessage = "Hola Maná Restobar! 👋 Quiero confirmar mi reserva:\n\n";
+    whatsappMessage += "*👤 Nombre:* " + res.name + "\n";
+    whatsappMessage += "*📅 Fecha:* " + res.date + "\n";
+    whatsappMessage += "*⏰ Hora:* " + res.timeSlot + "\n";
+    whatsappMessage += "*👥 Personas:* " + res.guests + "\n\n";
+    whatsappMessage += "*🍽️ Pedido:*\n" + platosTexto + "\n";
+    whatsappMessage += "*💰 Total Aprox:* $" + res.total.toLocaleString('es-CO') + "\n\n";
+    whatsappMessage += "Quedo atento a su confirmación!";
 
-👤 *Nombre:* ${res.name}
-📅 *Fecha:* ${res.date}
-⏰ *Hora:* ${res.timeSlot}
-👥 *Personas:* ${res.guests}
-
-🍽️ *Pedido:*
-${platosTexto}
-💰 *Total Aprox:* $${res.total.toLocaleString('es-CO')}
-
-¿Quedo atento a su confirmación!`;
-
-    // 3. Crear el enlace (Tu número: 573143258525)
-    const whatsappLink = `https://wa.me/573143258525?text=${encodeURIComponent(whatsappMessage)}`;
+    // 3. Codificar correctamente para URL
+    const encodedMsg = encodeURIComponent(whatsappMessage);
+    const whatsappLink = "https://wa.me/573143258525?text=" + encodedMsg;
 
     // 4. Mostrar en el Modal con el Botón Verde
     msg.innerHTML = `
@@ -302,7 +299,7 @@ ${platosTexto}
                 ${res.guests} personas • $${res.total.toLocaleString('es-CO')}
             </div>
 
-            <a href="${whatsappLink}" target="_blank" class="btn" style="background-color: #25D366; color: white; display: block; text-align: center; text-decoration: none; margin-top: 15px; font-weight: bold; border: none;">
+            <a href="${whatsappLink}" target="_blank" class="btn" style="background-color: #25D366; color: white; display: block; text-align: center; text-decoration: none; margin-top: 15px; font-weight: bold; border: none; padding: 12px; border-radius: 8px;">
                 <i class="fa-brands fa-whatsapp"></i> Enviar a WhatsApp
             </a>
         </div>
