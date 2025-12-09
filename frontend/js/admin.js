@@ -1,6 +1,5 @@
 const API_URL = '/api';
 
-// --- AUTH HELPERS ---
 function getHeaders() {
     const token = sessionStorage.getItem('adminToken');
     return {
@@ -9,9 +8,6 @@ function getHeaders() {
     };
 }
 
-// ==========================================
-// 1. LOGIN
-// ==========================================
 async function checkPassword() {
     const passInput = document.getElementById('passInput');
     const password = passInput.value.trim();
@@ -67,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(passInput) passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
     }
     
-    // Auto-logout 10 min
     let timeout;
     function resetTimer() {
         clearTimeout(timeout);
@@ -83,9 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     resetTimer(); 
 });
 
-// ==========================================
-// 2. NAVEGACIÓN
-// ==========================================
 function switchTab(tab) {
     ['menu', 'add', 'reservations', 'control'].forEach(t => {
         document.getElementById(t + 'Tab').style.display = 'none';
@@ -95,13 +87,9 @@ function switchTab(tab) {
     document.getElementById(tab + 'TabBtn').classList.add('active');
 
     if(tab === 'menu') loadMenuTable();
-    // Si salimos de "add", cancelamos edición por seguridad
     if(tab !== 'add') cancelEdit();
 }
 
-// ==========================================
-// 3. GESTIÓN DEL MENÚ (CRUD)
-// ==========================================
 const convertToBase64 = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -141,41 +129,33 @@ async function loadMenuTable() {
     } catch(err) { console.error(err); }
 }
 
-// --- FUNCIÓN EDITAR ---
 async function editDish(id) {
     try {
         const res = await fetch(API_URL + '/dishes/' + id);
         const dish = await res.json();
 
-        // Rellenar formulario
         document.getElementById('editDishId').value = dish.id;
         document.getElementById('nameInput').value = dish.name;
         document.getElementById('categoryInput').value = dish.category;
         document.getElementById('priceInput').value = dish.price;
         document.getElementById('descInput').value = dish.description;
 
-        // Cambiar interfaz a modo "Edición"
-        document.getElementById('formTitle').textContent = '✏️ Editar Plato';
         document.getElementById('submitBtn').textContent = '🔄 Actualizar Plato';
         document.getElementById('imageHint').style.display = 'block';
         document.getElementById('cancelEditBtn').style.display = 'inline-block';
 
-        // Ir a la pestaña
         switchTab('add');
-
     } catch(err) { alert('Error al cargar plato'); }
 }
 
 function cancelEdit() {
     document.getElementById('addDishForm').reset();
     document.getElementById('editDishId').value = '';
-    document.getElementById('formTitle').textContent = '➕ Agregar Nuevo Plato';
     document.getElementById('submitBtn').textContent = '💾 Guardar Plato';
     document.getElementById('imageHint').style.display = 'none';
     document.getElementById('cancelEditBtn').style.display = 'none';
 }
 
-// --- GUARDAR / ACTUALIZAR ---
 async function submitAddDish(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -196,14 +176,12 @@ async function submitAddDish(e) {
 
         let response;
         if (id) {
-            // MODO EDICIÓN (PUT)
             response = await fetch(API_URL + '/dishes/' + id, {
                 method: 'PUT',
                 headers: getHeaders(),
                 body: JSON.stringify(payload)
             });
         } else {
-            // MODO CREACIÓN (POST)
             response = await fetch(API_URL + '/dishes', {
                 method: 'POST',
                 headers: getHeaders(),
@@ -216,8 +194,7 @@ async function submitAddDish(e) {
             cancelEdit();
             switchTab('menu');
         } else {
-            if(response.status === 403) { alert('⚠️ Sesión expirada'); logout(); }
-            else alert('❌ Error al guardar');
+            alert('❌ Error al guardar');
         }
     } catch(err) { alert('Error de conexión'); }
     
@@ -234,9 +211,6 @@ async function deleteDish(id) {
     } catch(e) { alert('Error de conexión'); }
 }
 
-// ==========================================
-// 4. RESERVAS & CONFIG
-// ==========================================
 async function loadReservationsTable() {
     try {
         const res = await fetch(API_URL + '/reservations', { headers: getHeaders() });
@@ -274,6 +248,7 @@ async function showReservaDetails(id) {
         document.getElementById('reservaDetails').innerHTML = `
             <p><strong>${r.name}</strong> (${r.phone})</p>
             <p>${r.date} - ${r.timeSlot} (${r.guests} pers.)</p>
+            <p style="background: #f0f0f0; padding: 5px;">${r.address || 'Mesa en restaurante'}</p>
             <hr><ul>${itemsHtml}</ul>
             <p style="text-align:right"><strong>Total: $${r.total.toLocaleString('es-CO')}</strong></p>
         `;
@@ -297,8 +272,44 @@ async function loadConfig() {
             document.getElementById('minHoursInput').value = data.minHours || 8;
             document.getElementById('maxCapacityInput').value = data.maxCapacity || 30;
         }
+        
+        // Cargar vista previa imagen día
+        if (data.dailyMenuImage && document.getElementById('currentDailyImage')) {
+            const img = document.getElementById('currentDailyImage');
+            img.src = data.dailyMenuImage;
+            img.style.display = 'block';
+        }
+
         displayTimeSlots(data.timeSlots || []);
     } catch(err) {}
+}
+
+// --- FUNCIÓN PARA GUARDAR LA IMAGEN DEL DÍA ---
+async function saveDailyMenuImage() {
+    const fileInput = document.getElementById('dailyMenuInput');
+    if (!fileInput.files || !fileInput.files[0]) return alert('Selecciona una imagen primero');
+
+    const btn = document.querySelector('button[onclick="saveDailyMenuImage()"]');
+    btn.disabled = true; btn.textContent = 'Subiendo...';
+
+    try {
+        const imgBase64 = await convertToBase64(fileInput.files[0]);
+        // Usamos el endpoint de config para guardar la imagen con clave 'dailyMenuImage'
+        const res = await fetch(API_URL + '/config/dailyMenuImage', {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify({ value: imgBase64 })
+        });
+
+        if (res.ok) {
+            alert('✅ Imagen del día actualizada');
+            loadConfig(); // Recargar vista previa
+        } else {
+            alert('Error al guardar');
+        }
+    } catch(e) { alert('Error de conexión'); }
+    
+    btn.disabled = false; btn.textContent = '💾 Actualizar Imagen del Día';
 }
 
 function displayTimeSlots(slots) {
