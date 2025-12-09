@@ -80,7 +80,7 @@
                     <textarea id="descInput" rows="3"></textarea>
                 </div>
                 <div style="display: flex; gap: 10px;">
-                    <button type="submit" id="submitBtn" class="btn btn-primary btn-block">💾 Guardar Plato</button>
+                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">💾 Guardar Plato</button>
                     <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="btn btn-danger" style="display: none;">Cancelar</button>
                 </div>
             </form>
@@ -103,7 +103,7 @@
             
             <div class="config-section" style="border-left: 5px solid #F39C12;">
                 <h3 style="color: #F39C12; margin-bottom: 1rem;">🖼️ Imagen del Menú del Día</h3>
-                <p style="color: #666; margin-bottom: 10px;">Sube aquí la imagen principal para la sección "Arma tu Almuerzo".</p>
+                <p style="color: #666; margin-bottom: 10px;">Sube aquí la imagen promocional que aparecerá en la sección "Menú del Día".</p>
                 
                 <div class="form-group">
                     <img id="currentDailyImage" src="" style="width: 200px; border-radius: 8px; border: 1px solid #ccc; display: none; margin-bottom: 10px;">
@@ -113,29 +113,32 @@
             </div>
 
             <div class="config-section" style="border-left: 5px solid var(--secondary);">
-                <h3 style="color: var(--secondary); margin-bottom: 1rem;">🔐 Seguridad de Acceso</h3>
+                <h3>🔐 Seguridad</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label style="font-size: 0.9rem;">Contraseña Actual</label>
-                        <input type="password" id="currentAdminPassword" placeholder="Confirma tu clave actual">
+                        <input type="password" id="currentAdminPassword">
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label style="font-size: 0.9rem;">Nueva Contraseña</label>
-                        <input type="password" id="newAdminPassword" placeholder="Escribe la nueva clave">
+                        <input type="password" id="newAdminPassword">
                     </div>
                     <button onclick="changeAdminPassword()" class="btn btn-primary" style="height: 42px;">Actualizar</button>
                 </div>
             </div>
+            
             <div class="config-section">
                 <h3>⏰ Horas Mínimas</h3>
                 <div class="form-group"><input type="number" id="minHoursInput" min="1" max="48"></div>
                 <button onclick="saveMinHours()" class="btn btn-primary">💾 Guardar</button>
             </div>
+            
             <div class="config-section">
                 <h3>👥 Capacidad Máxima</h3>
                 <div class="form-group"><input type="number" id="maxCapacityInput" min="1"></div>
                 <button onclick="saveMaxCapacity()" class="btn btn-primary">💾 Guardar</button>
             </div>
+            
             <div class="config-section">
                 <h3>🕐 Franjas Horarias</h3>
                 <div id="timeSlotsContainer"></div>
