@@ -19,7 +19,8 @@
                 <li><a href="index.html">Inicio</a></li>
                 <li><a href="nosotros.html">Nosotros</a></li>
                 <li><a href="menu.html">Menú</a></li>
-                <li><a href="menu-dia.html">Menú del Día</a></li> <li><a href="reserva.html" class="active">Reservas</a></li>
+                <li><a href="menu-dia.html">Menú del Día</a></li>
+                <li><a href="reserva.html" class="active">Reservas</a></li>
                 <li><a href="admin.html">Admin</a></li>
             </ul>
         </div>
@@ -141,6 +142,24 @@
             <p id="modalSubtitle">Finaliza el proceso en WhatsApp.</p>
             <div id="confirmationMessage"></div>
             <button type="button" class="btn btn-primary" onclick="closeModal()" style="margin-top: 1.5rem; width: 100%;">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="customPlateModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="margin:0;">🛠️ Arma tu Plato</h2>
+                <button onclick="closeCustomPlateModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <p style="margin-bottom: 15px; color: #666;">Selecciona los ingredientes que deseas:</p>
+            
+            <div id="ingredientsList" class="ingredients-grid">
+                </div>
+
+            <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin:0;">Total: <span id="customTotal" style="color: var(--primary);">$0</span></h3>
+                <button onclick="addCustomPlateToOrder()" class="btn btn-primary">Agregar al Pedido</button>
+            </div>
         </div>
     </div>
 
