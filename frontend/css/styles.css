@@ -332,3 +332,57 @@ button, input, select, textarea { font-family: inherit; }
         grid-template-columns: 1fr;
     }
 }
+/* ESTILOS PARA EL MODAL DE ARMA TU PLATO */
+.ingredients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.ingredient-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ingredient-item:hover {
+    background: #f0f0f0;
+    border-color: var(--secondary);
+}
+
+.ingredient-item input {
+    width: auto;
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.ingredient-item span {
+    flex-grow: 1;
+    font-size: 0.95rem;
+}
+
+.ingredient-item strong {
+    color: var(--primary);
+    font-size: 0.9rem;
+}
+
+.special-card {
+    cursor: pointer;
+    border: 2px dashed var(--secondary);
+    background: #fffdf9;
+}
+
+.special-card:hover {
+    background: #fff;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
