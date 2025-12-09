@@ -273,7 +273,7 @@ async function loadConfig() {
             document.getElementById('maxCapacityInput').value = data.maxCapacity || 30;
         }
         
-        // Cargar vista previa imagen día
+        // --- MOSTRAR IMAGEN DEL DÍA SI EXISTE ---
         if (data.dailyMenuImage && document.getElementById('currentDailyImage')) {
             const img = document.getElementById('currentDailyImage');
             img.src = data.dailyMenuImage;
@@ -284,7 +284,7 @@ async function loadConfig() {
     } catch(err) {}
 }
 
-// --- FUNCIÓN PARA GUARDAR LA IMAGEN DEL DÍA ---
+// --- NUEVA FUNCIÓN: GUARDAR IMAGEN DEL DÍA ---
 async function saveDailyMenuImage() {
     const fileInput = document.getElementById('dailyMenuInput');
     if (!fileInput.files || !fileInput.files[0]) return alert('Selecciona una imagen primero');
@@ -294,7 +294,7 @@ async function saveDailyMenuImage() {
 
     try {
         const imgBase64 = await convertToBase64(fileInput.files[0]);
-        // Usamos el endpoint de config para guardar la imagen con clave 'dailyMenuImage'
+        // Usamos una ruta especial en config para esto
         const res = await fetch(API_URL + '/config/dailyMenuImage', {
             method: 'PUT',
             headers: getHeaders(),
@@ -303,7 +303,7 @@ async function saveDailyMenuImage() {
 
         if (res.ok) {
             alert('✅ Imagen del día actualizada');
-            loadConfig(); // Recargar vista previa
+            loadConfig(); 
         } else {
             alert('Error al guardar');
         }
