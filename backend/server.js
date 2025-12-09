@@ -2,9 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const fs = require('fs');
-const axios = require('axios');
+const { Pool } = require('pg'); // CAMBIO: Usamos pg en lugar de sqlite3
 const crypto = require('crypto');
 
 const app = express();
@@ -15,66 +13,54 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// --- BASE DE DATOS ---
-const dbDir = path.join(__dirname, 'database');
-if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
-
-const dbPath = path.join(dbDir, 'manacoffee.db');
-let db;
-
-const initDB = () => new Promise((resolve, reject) => {
-    db = new sqlite3.Database(dbPath, (err) => {
-        if (err) { console.error('Error BD:', err); reject(err); }
-        else { 
-            console.log('✅ Conectado a SQLite');
-            fixDatabaseStructure().then(() => {
-                createTables().then(() => {
-                    seedDatabase(); // AQUÍ SE CARGA EL MENÚ COMPLETO
-                    resolve();
-                }).catch(reject);
-            });
-        }
-    });
+// --- CONEXIÓN A BASE DE DATOS (POSTGRESQL) ---
+// Railway provee la variable DATABASE_URL automáticamente
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false } // Necesario para Railway
 });
 
-const runAsync = (sql, params = []) => new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) { if(err) reject(err); else resolve({id:this.lastID}); });
-});
-const getAsync = (sql, params = []) => new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => { if(err) reject(err); else resolve(row); });
-});
-const allAsync = (sql, params = []) => new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => { if(err) reject(err); else resolve(rows); });
-});
+// Función helper para consultas (simula lo que tenías antes pero con Postgres)
+const query = async (text, params) => await pool.query(text, params);
 
-const fixDatabaseStructure = () => new Promise((resolve) => {
-    db.run("ALTER TABLE admin ADD COLUMN token TEXT", (err) => resolve());
-});
+const initDB = async () => {
+    try {
+        await createTables();
+        await seedDatabase(); // AQUÍ SE CARGA EL MENÚ AUTOMÁTICAMENTE
+        console.log('✅ Base de datos inicializada y menú cargado.');
+    } catch (err) {
+        console.error('❌ Error inicializando DB:', err);
+    }
+};
 
-const createTables = () => new Promise((resolve, reject) => {
-    db.serialize(() => {
-        db.run(`CREATE TABLE IF NOT EXISTS dishes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, price INTEGER, description TEXT, image LONGTEXT, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-        db.run(`CREATE TABLE IF NOT EXISTS reservations (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, date TEXT, timeSlot TEXT, guests INTEGER, items TEXT, total INTEGER, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-        db.run(`CREATE TABLE IF NOT EXISTS admin (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, token TEXT)`);
-        db.run(`CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE, value TEXT)`);
-        
-        db.run(`INSERT OR IGNORE INTO admin (username, password) VALUES (?, ?)`, ['admin', '1234']);
-        db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['minHours', '8']);
-        db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['maxCapacity', '30']);
-        db.run(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['timeSlots', '["12:00-13:00", "13:00-14:00", "18:00-19:00", "19:00-20:00"]']);
-        resolve();
-    });
-});
+const createTables = async () => {
+    // Nota: En Postgres usamos SERIAL en vez de AUTOINCREMENT y TEXT en vez de LONGTEXT
+    await query(`CREATE TABLE IF NOT EXISTS dishes (id SERIAL PRIMARY KEY, name TEXT, category TEXT, price INTEGER, description TEXT, image TEXT, createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+    await query(`CREATE TABLE IF NOT EXISTS reservations (id SERIAL PRIMARY KEY, name TEXT, phone TEXT, date TEXT, timeSlot TEXT, guests INTEGER, items TEXT, total INTEGER, createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+    await query(`CREATE TABLE IF NOT EXISTS admin (id SERIAL PRIMARY KEY, username TEXT UNIQUE, password TEXT, token TEXT)`);
+    await query(`CREATE TABLE IF NOT EXISTS config (id SERIAL PRIMARY KEY, key TEXT UNIQUE, value TEXT)`);
+    
+    // Insertar datos por defecto si no existen
+    await query(`INSERT INTO admin (username, password) VALUES ($1, $2) ON CONFLICT (username) DO NOTHING`, ['admin', '1234']);
+    await query(`INSERT INTO config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, ['minHours', '8']);
+    await query(`INSERT INTO config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, ['maxCapacity', '30']);
+    await query(`INSERT INTO config (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, ['timeSlots', '["12:00-13:00", "13:00-14:00", "18:00-19:00", "19:00-20:00"]']);
+};
 
-// --- CARGA MASIVA DE PLATOS (MENÚ PDF COMPLETO) ---
+// --- CARGA MASIVA DE PLATOS (Tu menú original) ---
 const seedDatabase = async () => {
-    const count = await getAsync("SELECT COUNT(*) as count FROM dishes");
-    if (count.count > 0) return; // Si ya hay platos, no duplicar
+    const res = await query("SELECT COUNT(*) FROM dishes");
+    const count = parseInt(res.rows[0].count);
+    
+    if (count > 0) {
+        console.log(`ℹ️ La base de datos ya tiene ${count} platos. No se requiere carga inicial.`);
+        return; 
+    }
 
-    console.log("🔄 Cargando menú completo desde PDF...");
+    console.log("🔄 Base de datos vacía. Cargando menú completo...");
 
     const dishes = [
-        // --- CAFETERÍA (Clásicos, Frappes, Calientes, Antojos) ---
+        // --- CAFETERÍA ---
         {cat: "Cafetería", name: "Café Nevado", price: 5000, desc: "Café, Crema batida"},
         {cat: "Cafetería", name: "Cappu Nevado", price: 6500, desc: "Café, Crema batida, Leche"},
         {cat: "Cafetería", name: "Moca Nevado", price: 7500, desc: "Café, Crema batida, Chocolate"},
@@ -136,7 +122,7 @@ const seedDatabase = async () => {
         {cat: "Malteadas", name: "Malteada Milo", price: 12500, desc: "Helado, Milo, Leche, Chantilly"},
         {cat: "Malteadas", name: "Malteada Fresa", price: 12500, desc: "Helado, Fresa, Leche, Chantilly"},
 
-        // --- PLATOS A LA CARTA (Desayunos, Almuerzos, Ensaladas) ---
+        // --- PLATOS A LA CARTA ---
         {cat: "Platos a la Carta", name: "Huevos Benedictinos", price: 19000, desc: "Con salsa holandesa"},
         {cat: "Platos a la Carta", name: "Caldo de Costilla", price: 12900, desc: "Con pan/arepa y bebida"},
         {cat: "Platos a la Carta", name: "Caldo con Huevo", price: 12900, desc: "En agua o leche"},
@@ -257,10 +243,12 @@ const seedDatabase = async () => {
         {cat: "Cocteles", name: "Vino Caliente", price: 15000, desc: ""}
     ];
 
-    const stmt = db.prepare("INSERT INTO dishes (category, name, price, description) VALUES (?, ?, ?, ?)");
-    dishes.forEach(d => stmt.run(d.cat, d.name, d.price, d.desc || ""));
-    stmt.finalize();
-    console.log("✅ Menú cargado exitosamente.");
+    for (const d of dishes) {
+        await query("INSERT INTO dishes (category, name, price, description) VALUES ($1, $2, $3, $4)", 
+            [d.cat, d.name, d.price, d.desc || ""]
+        );
+    }
+    console.log("✅ Menú cargado exitosamente en Postgres.");
 };
 
 // --- SEGURIDAD ---
@@ -269,73 +257,95 @@ const requireAuth = async (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'No autorizado' });
     try {
-        const admin = await getAsync('SELECT * FROM admin WHERE token = ?', [token]);
-        if (!admin) return res.status(403).json({ error: 'Sesión expirada' });
+        const resDb = await query('SELECT * FROM admin WHERE token = $1', [token]);
+        if (resDb.rows.length === 0) return res.status(403).json({ error: 'Sesión expirada' });
         next();
     } catch { res.status(500).json({ error: 'Error auth' }); }
 };
 
-// --- RUTAS ---
+// --- RUTAS (Adaptadas a Postgres) ---
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const admin = await getAsync('SELECT * FROM admin WHERE username=? AND password=?', [username, password]);
-        if (!admin) return res.status(401).json({ error: 'Datos incorrectos' });
+        const result = await query('SELECT * FROM admin WHERE username=$1 AND password=$2', [username, password]);
+        if (result.rows.length === 0) return res.status(401).json({ error: 'Datos incorrectos' });
         const token = crypto.randomBytes(32).toString('hex');
-        await runAsync('UPDATE admin SET token=? WHERE username=?', [token, username]);
+        await query('UPDATE admin SET token=$1 WHERE username=$2', [token, username]);
         res.json({ message: 'OK', token });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/admin/logout', async (req, res) => {
-    await runAsync('UPDATE admin SET token=NULL');
+    await query('UPDATE admin SET token=NULL'); // Logout global por simplicidad
     res.json({ message: 'Bye' });
 });
 
 app.get('/api/dishes', async (req, res) => {
-    const r = await allAsync('SELECT * FROM dishes ORDER BY category, name');
-    res.json(r);
+    try {
+        const result = await query('SELECT * FROM dishes ORDER BY category, name');
+        res.json(result.rows);
+    } catch(e) { res.status(500).json({error: e.message}); }
 });
 
 app.get('/api/dishes/:id', async (req, res) => {
-    const r = await getAsync('SELECT * FROM dishes WHERE id=?', [req.params.id]);
-    res.json(r || {});
+    const result = await query('SELECT * FROM dishes WHERE id=$1', [req.params.id]);
+    res.json(result.rows[0] || {});
 });
 
 app.post('/api/dishes', requireAuth, async (req, res) => {
     const { name, category, price, description, image } = req.body;
-    await runAsync('INSERT INTO dishes (name,category,price,description,image) VALUES (?,?,?,?,?)', [name, category, price, description, image]);
+    await query('INSERT INTO dishes (name,category,price,description,image) VALUES ($1,$2,$3,$4,$5)', [name, category, price, description, image]);
     res.json({ message: 'Creado' });
 });
 
 app.put('/api/dishes/:id', requireAuth, async (req, res) => {
     const { name, category, price, description, image } = req.body;
-    if (image) await runAsync('UPDATE dishes SET name=?, category=?, price=?, description=?, image=? WHERE id=?', [name, category, price, description, image, req.params.id]);
-    else await runAsync('UPDATE dishes SET name=?, category=?, price=?, description=? WHERE id=?', [name, category, price, description, req.params.id]);
+    if (image) await query('UPDATE dishes SET name=$1, category=$2, price=$3, description=$4, image=$5 WHERE id=$6', [name, category, price, description, image, req.params.id]);
+    else await query('UPDATE dishes SET name=$1, category=$2, price=$3, description=$4 WHERE id=$5', [name, category, price, description, req.params.id]);
     res.json({ message: 'Actualizado' });
 });
 
 app.delete('/api/dishes/:id', requireAuth, async (req, res) => {
-    await runAsync('DELETE FROM dishes WHERE id=?', [req.params.id]);
+    await query('DELETE FROM dishes WHERE id=$1', [req.params.id]);
     res.json({ message: 'Eliminado' });
 });
 
-app.get('/api/config', async(req,res)=>{const c=await allAsync('SELECT * FROM config');const r={};c.forEach(x=>{try{r[x.key]=JSON.parse(x.value)}catch{r[x.key]=x.value}});res.json(r)});
-app.put('/api/config/:key', requireAuth, async(req,res)=>{const v=typeof req.body.value==='string'?req.body.value:JSON.stringify(req.body.value);await runAsync('INSERT OR REPLACE INTO config (key,value) VALUES(?,?)',[req.params.key,v]);res.json({message:'OK'})});
+// Configuración y Reservas (Postgres Syntax)
+app.get('/api/config', async(req,res)=>{
+    const result = await query('SELECT * FROM config');
+    const r={};
+    result.rows.forEach(x=>{try{r[x.key]=JSON.parse(x.value)}catch{r[x.key]=x.value}});
+    res.json(r);
+});
+
+app.put('/api/config/:key', requireAuth, async(req,res)=>{
+    const v=typeof req.body.value==='string'?req.body.value:JSON.stringify(req.body.value);
+    await query('INSERT INTO config (key,value) VALUES($1,$2) ON CONFLICT (key) DO UPDATE SET value=$2', [req.params.key,v]);
+    res.json({message:'OK'});
+});
 
 app.post('/api/reservations', async(req,res)=>{
     const {name,phone,date,timeSlot,guests,items,total}=req.body;
-    await runAsync('INSERT INTO reservations (name,phone,date,timeSlot,guests,items,total) VALUES (?,?,?,?,?,?,?)',[name,phone,date,timeSlot,guests,JSON.stringify(items),total]);
+    await query('INSERT INTO reservations (name,phone,date,timeSlot,guests,items,total) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        [name,phone,date,timeSlot,guests,JSON.stringify(items),total]);
     res.json({message:'OK'});
 });
+
 app.get('/api/reservations', requireAuth, async(req,res)=>{
-    const r=await allAsync('SELECT * FROM reservations ORDER BY date DESC');
+    const result = await query('SELECT * FROM reservations ORDER BY date DESC');
+    const r = result.rows;
     r.forEach(x=>{try{x.items=JSON.parse(x.items)}catch{x.items=[]}});
     res.json(r);
 });
-app.delete('/api/reservations/:id', requireAuth, async(req,res)=>{await runAsync('DELETE FROM reservations WHERE id=?',[req.params.id]);res.json({message:'Borrado'})});
 
+app.delete('/api/reservations/:id', requireAuth, async(req,res)=>{
+    await query('DELETE FROM reservations WHERE id=$1',[req.params.id]);
+    res.json({message:'Borrado'});
+});
+
+// Servir frontend
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
 app.get('*.html', (req, res) => res.sendFile(path.join(__dirname, '../frontend', req.path)));
 
-initDB().then(() => app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`)));
+// Iniciar servidor
+initDB().then(() => app.listen(PORT, () => console.log(`🚀 Servidor PostgreSQL listo en puerto ${PORT}`)));
