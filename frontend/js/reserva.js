@@ -23,13 +23,14 @@ const INGREDIENTS = [
     { name: "Papas locas", price: 9900 }
 ];
 
-let tempCustomPlate = []; // Para guardar temporalmente lo que se selecciona en el modal
+// Objeto para guardar cantidades temporales { "Arroz": 2, "Papas": 1 }
+let tempCustomQuantities = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
     renderMenuForReservation();
     setupReservationForm();
     loadReservationConfig();
-    renderIngredientsList(); // Renderizar lista en el modal
+    renderIngredientsList(); // Renderizar lista con contadores
 });
 
 // ... (Funciones de Configuración y Horarios IGUAL QUE ANTES) ...
@@ -160,7 +161,11 @@ async function renderMenuForReservation() {
                 <div class="reserva-menu-item-icon">${m.image ? `<img src="${m.image}" alt="${m.name}">` : '🍽️'}</div>
                 <h4>${m.name}</h4>
                 <span class="price">$${m.price.toLocaleString('es-CO')}</span>
-                <input type="number" min="0" value="0" placeholder="0" onchange="updateReservationItem(${m.id}, this.value, '${m.name}', ${m.price})">
+                <div class="qty-control">
+                    <button type="button" onclick="changeQty(${m.id}, -1, '${m.name}', ${m.price})">-</button>
+                    <input type="number" id="qty-${m.id}" value="0" readonly>
+                    <button type="button" onclick="changeQty(${m.id}, 1, '${m.name}', ${m.price})">+</button>
+                </div>
             </div>
         `).join('');
 
@@ -169,33 +174,53 @@ async function renderMenuForReservation() {
     } catch (err) { console.error(err); }
 }
 
-// Actualizar ítems normales
-window.updateReservationItem = function(id, qty, name, price) {
-    qty = parseInt(qty) || 0;
-    if (qty > 0) selectedItems[id] = { name, price, qty, subtotal: qty * price };
+// Función auxiliar para los botones +/- del menú principal
+window.changeQty = function(id, delta, name, price) {
+    const input = document.getElementById(`qty-${id}`);
+    let newVal = parseInt(input.value) + delta;
+    if (newVal < 0) newVal = 0;
+    input.value = newVal;
+    
+    if (newVal > 0) selectedItems[id] = { name, price, qty: newVal, subtotal: newVal * price };
     else delete selectedItems[id];
+    
     updateReservationSummary();
 };
 
+// Función para actualizar desde el input manual (si alguien escribe)
+window.updateReservationItem = function(id, qty, name, price) {
+    // Ya no se usa directamente, pero se deja por compatibilidad si es necesario
+    changeQty(id, 0, name, price); // Lógica manejada arriba
+};
+
 // =========================================================
-// LÓGICA DE "ARMA TU PLATO"
+// LÓGICA DE "ARMA TU PLATO" CON CANTIDADES
 // =========================================================
 function renderIngredientsList() {
     const list = document.getElementById('ingredientsList');
     if(!list) return;
     list.innerHTML = INGREDIENTS.map((ing, index) => `
-        <label class="ingredient-item">
-            <input type="checkbox" onchange="toggleIngredient(${index}, this.checked)">
-            <span>${ing.name}</span>
-            <strong>$${ing.price.toLocaleString('es-CO')}</strong>
-        </label>
+        <div class="ingredient-item">
+            <div class="ing-info">
+                <span>${ing.name}</span>
+                <strong>$${ing.price.toLocaleString('es-CO')}</strong>
+            </div>
+            <div class="ing-controls">
+                <button type="button" class="btn-qty" onclick="updateIngQty(${index}, -1)">-</button>
+                <span id="ing-qty-${index}" class="qty-display">0</span>
+                <button type="button" class="btn-qty" onclick="updateIngQty(${index}, 1)">+</button>
+            </div>
+        </div>
     `).join('');
 }
 
 window.openCustomPlateModal = function() {
-    tempCustomPlate = [];
-    // Resetear checkboxes
-    document.querySelectorAll('#ingredientsList input').forEach(i => i.checked = false);
+    tempCustomQuantities = {}; // Reiniciar cantidades
+    // Resetear visualmente todos los contadores a 0
+    INGREDIENTS.forEach((_, index) => {
+        const display = document.getElementById(`ing-qty-${index}`);
+        if(display) display.textContent = "0";
+    });
     document.getElementById('customTotal').textContent = "$0";
     document.getElementById('customPlateModal').style.display = 'flex';
 };
@@ -204,31 +229,64 @@ window.closeCustomPlateModal = function() {
     document.getElementById('customPlateModal').style.display = 'none';
 };
 
-window.toggleIngredient = function(index, isChecked) {
+window.updateIngQty = function(index, delta) {
     const ingredient = INGREDIENTS[index];
-    if(isChecked) {
-        tempCustomPlate.push(ingredient);
+    const display = document.getElementById(`ing-qty-${index}`);
+    
+    // Obtener valor actual o iniciar en 0
+    let currentQty = tempCustomQuantities[ingredient.name] || 0;
+    let newQty = currentQty + delta;
+    
+    if (newQty < 0) newQty = 0;
+    
+    // Guardar o borrar del objeto temporal
+    if (newQty > 0) {
+        tempCustomQuantities[ingredient.name] = newQty;
     } else {
-        tempCustomPlate = tempCustomPlate.filter(i => i.name !== ingredient.name);
+        delete tempCustomQuantities[ingredient.name];
     }
-    // Calcular total temporal
-    const total = tempCustomPlate.reduce((sum, i) => sum + i.price, 0);
-    document.getElementById('customTotal').textContent = `$${total.toLocaleString('es-CO')}`;
+    
+    // Actualizar vista
+    display.textContent = newQty;
+    display.style.color = newQty > 0 ? 'var(--primary)' : '#666';
+    display.style.fontWeight = newQty > 0 ? 'bold' : 'normal';
+    
+    calculateCustomTotal();
 };
 
+function calculateCustomTotal() {
+    let total = 0;
+    for (const [name, qty] of Object.entries(tempCustomQuantities)) {
+        const ing = INGREDIENTS.find(i => i.name === name);
+        if (ing) total += ing.price * qty;
+    }
+    document.getElementById('customTotal').textContent = `$${total.toLocaleString('es-CO')}`;
+}
+
 window.addCustomPlateToOrder = function() {
-    if(tempCustomPlate.length === 0) return alert("Selecciona al menos un ingrediente");
+    const ingredientNames = Object.keys(tempCustomQuantities);
+    
+    if(ingredientNames.length === 0) return alert("Selecciona al menos una porción.");
 
-    const total = tempCustomPlate.reduce((sum, i) => sum + i.price, 0);
-    const names = tempCustomPlate.map(i => i.name).join(', ');
-    const customId = 'custom_' + Date.now(); // ID único
+    let totalPlatePrice = 0;
+    let descriptionParts = [];
 
-    // Agregar a selectedItems
+    for (const [name, qty] of Object.entries(tempCustomQuantities)) {
+        const ing = INGREDIENTS.find(i => i.name === name);
+        if (ing) {
+            totalPlatePrice += ing.price * qty;
+            descriptionParts.push(`${qty}x ${name}`);
+        }
+    }
+
+    const customId = 'custom_' + Date.now(); // ID único para este plato armado
+
+    // Agregar a selectedItems como un solo ítem "Plato Armado"
     selectedItems[customId] = {
-        name: `Armado: ${names}`,
-        price: total,
-        qty: 1,
-        subtotal: total
+        name: `Armado: ${descriptionParts.join(', ')}`,
+        price: totalPlatePrice,
+        qty: 1, // Es 1 plato compuesto por varios ingredientes
+        subtotal: totalPlatePrice
     };
 
     updateReservationSummary();
@@ -238,8 +296,8 @@ window.addCustomPlateToOrder = function() {
 // Función para borrar ítems del resumen (útil para los personalizados)
 window.removeItem = function(id) {
     delete selectedItems[id];
-    // Si es un ítem de menú normal, resetear su input
-    const input = document.querySelector(`input[onchange*="${id}"]`);
+    // Si es un ítem de menú normal, resetear su input visual
+    const input = document.getElementById(`qty-${id}`);
     if(input) input.value = 0;
     
     updateReservationSummary();
