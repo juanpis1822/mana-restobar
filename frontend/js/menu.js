@@ -4,6 +4,7 @@ let currentFilter = 'all';
 document.addEventListener('DOMContentLoaded', () => {
     renderMenuItems();
     setupFilters();
+    setupAccordions(); // Nueva función para los acordeones
 });
 
 async function renderMenuItems() {
@@ -51,7 +52,6 @@ async function renderMenuItems() {
 }
 
 function setupFilters() {
-    // Configurar el click en los botones de filtro si se agregan dinámicamente
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -63,20 +63,53 @@ function setupFilters() {
     });
 }
 
-// Función global llamada desde el HTML (onclick="filterMenu(...)")
+// LÓGICA DE LOS ACORDEONES
+function setupAccordions() {
+    const acc = document.getElementsByClassName("accordion-header");
+    
+    for (let i = 0; i < acc.length; i++) {
+        acc[i].addEventListener("click", function() {
+            // Alternar clase activa para girar la flecha
+            this.classList.toggle("active");
+            
+            // Abrir o cerrar el panel
+            const panel = this.nextElementSibling;
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                // Cerrar otros paneles abiertos (opcional, para efecto acordeón único)
+                closeAllAccordions();
+                this.classList.add("active"); // Re-activar el actual
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            }
+        });
+    }
+}
+
+function closeAllAccordions() {
+    const acc = document.getElementsByClassName("accordion-header");
+    for (let i = 0; i < acc.length; i++) {
+        acc[i].classList.remove("active");
+        acc[i].nextElementSibling.style.maxHeight = null;
+    }
+}
+
+// Función global llamada desde el HTML
 window.filterMenu = function(cat) {
     currentFilter = cat;
     renderMenuItems();
     
-    // Actualizar visualmente los botones para reflejar la selección
+    // Scroll suave hacia los resultados si es móvil
+    if(window.innerWidth < 768) {
+        document.getElementById('menuGrid').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Actualizar botones activos
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
         btn.classList.remove('active');
-        // Compara el texto del botón con la categoría o si es "Todos"
-        if (btn.innerText.trim() === cat || (cat === 'all' && btn.innerText.trim() === 'Todos')) {
+        if (btn.innerText.trim() === cat || (cat === 'all' && btn.innerText.trim() === 'Ver Todo el Menú')) {
             btn.classList.add('active');
         }
-        // Fallback por si el evento click no lo capturó
-        if (event && event.target === btn) btn.classList.add('active');
     });
 };
