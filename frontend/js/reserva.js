@@ -3,6 +3,7 @@ let selectedItems = {};
 let allDishes = [];
 let allTimeSlots = [];
 let currentOrderType = 'reserva';
+let currentFilter = 'Todos'; // Filtro inicial
 
 const INGREDIENTS = [
     { name: "Arroz", price: 4000 },
@@ -31,7 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
     renderIngredientsList();
 });
 
-// Función de emojis (reutilizada)
+// MAPA DE CATEGORÍAS PARA FILTRADO AGRUPADO
+const CATEGORY_GROUPS = {
+    'Comida Rápida': ['Hamburguesas', 'Perros Calientes', 'Salchipapas', 'Desgranados', 'Picadas', 'Sandwiches', 'Patacones', 'Wraps', 'Vegetariano', 'Infantil'],
+    'Restaurante': ['Desayunos', 'Huevos', 'Carnes', 'Aves', 'Mariscos', 'Ceviches', 'Ensaladas'],
+    'Cafetería': ['Clásicos Café', 'Nevados', 'Frappés', 'Malteadas', 'Bebidas Calientes', 'Repostería', 'Postres', 'Antojos'],
+    'Bebidas': ['Jugos Agua', 'Jugos Leche', 'Limonadas', 'Sodas', 'Mocktails', 'Micheladas', 'Cócteles', 'Cervezas', 'Vinos', 'Otras Bebidas']
+};
+
 function getCategoryEmoji(category) {
     const emojis = {
         'Clásicos Café': '☕', 'Nevados': '🍧', 'Frappés': '🥤', 'Malteadas': '🍦', 
@@ -47,6 +55,18 @@ function getCategoryEmoji(category) {
     };
     return emojis[category] || '🍽️';
 }
+
+window.filterReservaMenu = function(filter) {
+    currentFilter = filter;
+    
+    // Actualizar botones visualmente
+    document.querySelectorAll('.reserva-tab-btn').forEach(btn => {
+        if(btn.innerText === filter) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+
+    renderMenuForReservation(); // Re-renderizar con filtro aplicado
+};
 
 window.setOrderType = function(type) {
     currentOrderType = type;
@@ -145,28 +165,42 @@ async function checkSlotCapacity(dateStr, timeSlot) {
 
 async function renderMenuForReservation() {
     try {
-        const response = await fetch(API_URL + '/dishes');
-        allDishes = await response.json();
+        if (allDishes.length === 0) {
+            const response = await fetch(API_URL + '/dishes');
+            allDishes = await response.json();
+        }
+        
         const grid = document.getElementById('reservaMenuGrid');
         if (!grid) return;
 
-        const customCard = `
-            <div class="reserva-menu-item special-card" onclick="openCustomPlateModal()">
-                <div class="reserva-menu-item-icon" style="background: #fdf2e9; color: var(--primary); display:flex; justify-content:center; align-items:center;">
-                    <i class="fa-solid fa-utensils" style="font-size: 3rem;"></i>
-                </div>
-                <h4>🛠️ Arma tu Plato</h4>
-                <span class="price">A tu gusto</span>
-                <button type="button" class="btn btn-sm btn-primary" style="margin-top:5px; width:100%;">Empezar</button>
-            </div>
-        `;
+        // FILTRAR PLATOS
+        let filteredDishes = allDishes;
+        if (currentFilter !== 'Todos') {
+            const allowedCategories = CATEGORY_GROUPS[currentFilter] || [];
+            filteredDishes = allDishes.filter(d => allowedCategories.includes(d.category));
+        }
 
-        if (allDishes.length === 0) {
-            grid.innerHTML = customCard + '<p style="text-align:center;color:#999;grid-column:1/-1;">No hay más platos disponibles.</p>';
+        // Tarjeta Especial de "Arma tu Plato" (Solo visible en Todos o Restaurante)
+        let customCard = '';
+        if (currentFilter === 'Todos' || currentFilter === 'Restaurante') {
+            customCard = `
+                <div class="reserva-menu-item special-card" onclick="openCustomPlateModal()">
+                    <div class="reserva-menu-item-icon" style="background: #fdf2e9; color: var(--primary); display:flex; justify-content:center; align-items:center;">
+                        <i class="fa-solid fa-utensils" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4>🛠️ Arma tu Plato</h4>
+                    <span class="price">A tu gusto</span>
+                    <button type="button" class="btn btn-sm btn-primary" style="margin-top:5px; width:100%;">Empezar</button>
+                </div>
+            `;
+        }
+
+        if (filteredDishes.length === 0 && !customCard) {
+            grid.innerHTML = '<p style="text-align:center;color:#999;grid-column:1/-1;">No hay platos en esta categoría.</p>';
             return;
         }
 
-        const dishesHtml = allDishes.map(m => `
+        const dishesHtml = filteredDishes.map(m => `
             <div class="reserva-menu-item">
                 <div class="reserva-menu-item-icon" style="${!m.image ? 'display:flex;align-items:center;justify-content:center;background:#fff;' : ''}">
                     ${m.image 
@@ -177,7 +211,7 @@ async function renderMenuForReservation() {
                 <span class="price">$${m.price.toLocaleString('es-CO')}</span>
                 <div class="qty-control">
                     <button type="button" onclick="changeQty(${m.id}, -1, '${m.name}', ${m.price})">-</button>
-                    <input type="number" id="qty-${m.id}" value="0" readonly>
+                    <input type="number" id="qty-${m.id}" value="${selectedItems[m.id] ? selectedItems[m.id].qty : 0}" readonly>
                     <button type="button" onclick="changeQty(${m.id}, 1, '${m.name}', ${m.price})">+</button>
                 </div>
             </div>
@@ -190,6 +224,8 @@ async function renderMenuForReservation() {
 
 window.changeQty = function(id, delta, name, price) {
     const input = document.getElementById(`qty-${id}`);
+    if (!input) return; // Evita error si el plato no está visible actualmente
+    
     let newVal = parseInt(input.value) + delta;
     if (newVal < 0) newVal = 0;
     input.value = newVal;
@@ -198,10 +234,6 @@ window.changeQty = function(id, delta, name, price) {
     else delete selectedItems[id];
     
     updateReservationSummary();
-};
-
-window.updateReservationItem = function(id, qty, name, price) {
-    changeQty(id, 0, name, price);
 };
 
 function renderIngredientsList() {
@@ -287,6 +319,7 @@ window.addCustomPlateToOrder = function() {
 
 window.removeItem = function(id) {
     delete selectedItems[id];
+    // Intentar resetear input si está visible
     const input = document.getElementById(`qty-${id}`);
     if(input) input.value = 0;
     updateReservationSummary();
