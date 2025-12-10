@@ -106,9 +106,7 @@ button, input, select, textarea { font-family: inherit; }
    ========================================================================== */
 .menu-page { padding: 3rem 0; min-height: 60vh; }
 .menu-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 3rem; }
-.menu-filters { display: flex; justify-content: center; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap; }
-.filter-btn { background: transparent; border: 2px solid var(--primary); color: var(--primary); padding: 0.7rem 1.8rem; border-radius: 50px; font-weight: 700; cursor: pointer; transition: var(--transition); }
-.filter-btn:hover, .filter-btn.active { background: var(--primary); color: var(--white); transform: scale(1.05); }
+/* Los filtros ahora usan el estilo de acordeón más abajo */
 .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2.5rem; margin-bottom: 4rem; }
 .menu-card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid #eee; transition: var(--transition); }
 .menu-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
@@ -126,7 +124,7 @@ button, input, select, textarea { font-family: inherit; }
    ========================================================================== */
 .reserva-page { padding: 3rem 0; }
 
-/* --- NUEVO: SELECTOR DE TIPO (TABS) --- */
+/* Selector de tipo (Tabs: Reserva/Domicilio) */
 .order-type-selector { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
 .type-btn { background: var(--white); border: 2px solid var(--secondary); color: var(--secondary); padding: 1rem 2rem; font-size: 1.1rem; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 10px; font-weight: 700; }
 .type-btn i { font-size: 1.3rem; }
@@ -209,7 +207,7 @@ button, input, select, textarea { font-family: inherit; }
 .footer-bottom { background: #000; padding: 1.5rem; text-align: center; color: #666; font-size: 0.85rem; border-top: 1px solid #222; }
 
 /* ==========================================================================
-   10. PÁGINA SOBRE NOSOTROS (NUEVO)
+   10. PÁGINA SOBRE NOSOTROS
    ========================================================================== */
 .about-page { padding: 4rem 0; background-color: var(--light); }
 .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; margin-bottom: 5rem; }
@@ -245,9 +243,9 @@ button, input, select, textarea { font-family: inherit; }
     .footer-main-title { font-size: 2.2rem; }
     .footer-grid { text-align: center; }
     .footer-social-icons { justify-content: center; }
-    /* Responsive Nosotros */
     .about-grid, .social-content-grid { grid-template-columns: 1fr; }
     .about-image { order: -1; margin-bottom: 1rem; }
+    .daily-menu-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -266,126 +264,18 @@ button, input, select, textarea { font-family: inherit; }
     .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
     .login-box { padding: 2rem 1.5rem; }
 }
+
 /* ==========================================================================
    12. PÁGINA MENÚ DEL DÍA (NUEVO)
    ========================================================================== */
-.daily-menu-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
-    margin-bottom: 4rem;
-}
-
-.daily-image-container img {
-    width: 100%;
-    border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    border: 4px solid var(--white);
-}
-
-.daily-text-container {
-    background: var(--white);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid #eee;
-}
-
-.build-lunch-card h2 {
-    color: var(--primary);
-    border-bottom: 2px solid var(--secondary);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-    font-size: 1.8rem;
-}
-
-.additions-list {
-    list-style: none;
-    padding: 0;
-}
-
-.additions-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px dashed #eee;
-    font-size: 1.05rem;
-}
-
-.additions-list li strong {
-    color: var(--primary);
-}
-
-.lunch-note {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #fff3cd;
-    border-left: 4px solid #ffc107;
-    color: #856404;
-    font-size: 0.9rem;
-    font-weight: bold;
-}
-
-@media (max-width: 768px) {
-    .daily-menu-grid {
-        grid-template-columns: 1fr;
-    }
-}
-/* ESTILOS PARA EL MODAL DE ARMA TU PLATO */
-.ingredients-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-.ingredient-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f9f9f9;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #eee;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.ingredient-item:hover {
-    background: #f0f0f0;
-    border-color: var(--secondary);
-}
-
-.ingredient-item input {
-    width: auto;
-    margin-right: 10px;
-    transform: scale(1.2);
-}
-
-.ingredient-item span {
-    flex-grow: 1;
-    font-size: 0.95rem;
-}
-
-.ingredient-item strong {
-    color: var(--primary);
-    font-size: 0.9rem;
-}
-
-.special-card {
-    cursor: pointer;
-    border: 2px dashed var(--secondary);
-    background: #fffdf9;
-}
-
-.special-card:hover {
-    background: #fff;
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
+.daily-menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; margin-bottom: 4rem; }
+.daily-image-container img { width: 100%; border-radius: 12px; box-shadow: var(--shadow-lg); border: 4px solid var(--white); }
+.daily-text-container { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid #eee; }
+.build-lunch-card h2 { color: var(--primary); border-bottom: 2px solid var(--secondary); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.8rem; }
+.additions-list { list-style: none; padding: 0; }
+.additions-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 1.05rem; }
+.additions-list li strong { color: var(--primary); }
+.lunch-note { margin-top: 20px; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; color: #856404; font-size: 0.9rem; font-weight: bold; }
 
 /* ==========================================================================
    ESTILOS NUEVOS PARA ACORDEONES DEL MENÚ
@@ -409,7 +299,7 @@ button, input, select, textarea { font-family: inherit; }
 .accordion-header {
     width: 100%;
     padding: 1.2rem;
-    background: #fdf2e9; /* Color suave de fondo */
+    background: #fdf2e9; 
     border: none;
     outline: none;
     text-align: left;
@@ -423,18 +313,9 @@ button, input, select, textarea { font-family: inherit; }
     transition: background 0.3s;
 }
 
-.accordion-header:hover {
-    background: #f5e6d8;
-}
-
-.accordion-header i {
-    transition: transform 0.3s ease;
-}
-
-/* Clase para girar la flecha cuando está abierto */
-.accordion-header.active i {
-    transform: rotate(180deg);
-}
+.accordion-header:hover { background: #f5e6d8; }
+.accordion-header i { transition: transform 0.3s ease; }
+.accordion-header.active i { transform: rotate(180deg); }
 
 .accordion-content {
     max-height: 0;
@@ -451,184 +332,93 @@ button, input, select, textarea { font-family: inherit; }
     justify-content: center;
 }
 
-/* Ajuste a los botones dentro del acordeón */
 .filter-group .filter-btn {
     font-size: 0.9rem;
     padding: 0.6rem 1.2rem;
-    flex-grow: 1; /* Para que ocupen espacio equitativo */
+    flex-grow: 1; 
     max-width: 200px;
+    border: 2px solid var(--secondary);
+    background: transparent;
+    color: var(--secondary);
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
 }
+
+.filter-group .filter-btn:hover, .filter-group .filter-btn.active {
+    background: var(--secondary);
+    color: var(--white);
+}
+
 /* ==========================================================================
    NUEVOS ESTILOS: CONTROLES DE CANTIDAD (ARMA TU PLATO & MENÚ)
    ========================================================================== */
+.ingredients-grid { display: grid; grid-template-columns: 1fr; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+.ingredient-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px solid #eee; transition: all 0.2s; }
+.ingredient-item:hover { background: #fff; border-color: var(--secondary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.ing-info { display: flex; flex-direction: column; }
+.ing-info span { font-size: 1rem; color: var(--text-main); }
+.ing-info strong { font-size: 0.85rem; color: var(--secondary); }
+.ing-controls { display: flex; align-items: center; gap: 10px; background: #fff; padding: 4px; border-radius: 20px; border: 1px solid #ddd; }
+.btn-qty { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--light); color: var(--primary); font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.btn-qty:hover { background: var(--secondary); color: #fff; }
+.btn-qty:active { transform: scale(0.9); }
+.qty-display { font-weight: 600; min-width: 20px; text-align: center; font-size: 1rem; user-select: none; }
+.qty-control { display: flex; justify-content: center; align-items: center; gap: 5px; margin-top: 10px; }
+.qty-control button { width: 30px; height: 30px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+.qty-control input { width: 40px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px; font-weight: bold; }
+.special-card { cursor: pointer; border: 2px dashed var(--secondary); background: #fffdf9; }
+.special-card:hover { background: #fff; transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 
-/* Estilos para el modal de Arma tu Plato */
-.ingredients-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-.ingredient-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #f9f9f9;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #eee;
-    transition: all 0.2s;
-}
-
-.ingredient-item:hover {
-    background: #fff;
-    border-color: var(--secondary);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.ing-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.ing-info span {
-    font-size: 1rem;
-    color: var(--text-main);
-}
-
-.ing-info strong {
-    font-size: 0.85rem;
-    color: var(--secondary);
-}
-
-.ing-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #fff;
-    padding: 4px;
-    border-radius: 20px;
-    border: 1px solid #ddd;
-}
-
-.btn-qty {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: var(--light);
-    color: var(--primary);
-    font-weight: bold;
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.btn-qty:hover {
-    background: var(--secondary);
-    color: #fff;
-}
-
-.btn-qty:active {
-    transform: scale(0.9);
-}
-
-.qty-display {
-    font-weight: 600;
-    min-width: 20px;
-    text-align: center;
-    font-size: 1rem;
-    user-select: none;
-}
-
-/* Estilos para los botones +/- en las tarjetas del menú general */
-.qty-control {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-    margin-top: 10px;
-}
-
-.qty-control button {
-    width: 30px;
-    height: 30px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.qty-control input {
-    width: 40px;
-    text-align: center;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 5px;
-    font-weight: bold;
-}
 /* ==========================================================================
-   ESTILOS PARA PESTAÑAS Y SUB-FILTROS DE RESERVAS
+   ESTILOS PARA PESTAÑAS Y SUB-FILTROS DE RESERVAS (CORREGIDO: WRAP)
    ========================================================================== */
 .reserva-tabs {
     display: flex;
-    overflow-x: auto;
-    gap: 10px;
+    flex-wrap: wrap;       /* MAGIA: Esto hace que los botones bajen si no caben */
+    justify-content: center; /* Los centra en la pantalla */
+    gap: 8px;              /* Espacio entre botones */
     padding-bottom: 10px;
     margin-bottom: 15px;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch; /* Suavidad en iOS */
-    scrollbar-width: none; /* Ocultar barra en Firefox */
+    width: 100%;
 }
 
-/* Ocultar barra scroll en Chrome/Safari */
-.reserva-tabs::-webkit-scrollbar {
-    display: none;
-}
+.reserva-tabs::-webkit-scrollbar { display: none; }
 
 .reserva-tab-btn {
     background: #fff;
     border: 1px solid var(--secondary);
     color: var(--secondary);
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: 20px;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 700;
-    transition: all 0.3s;
-    flex-shrink: 0; /* Evita que se encojan */
+    transition: all 0.2s;
 }
 
-.reserva-tab-btn:hover {
-    background: #fdf2e9;
-}
+.reserva-tab-btn:hover { background: #fdf2e9; transform: translateY(-2px); }
 
 .reserva-tab-btn.active {
     background: var(--primary);
     color: #fff;
     border-color: var(--primary);
-    transform: scale(1.05);
     box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2);
+    transform: scale(1.05);
 }
 
-/* Estilos específicos para los sub-botones (más pequeños) */
 .sub-tabs .sub-btn {
     font-size: 0.85rem;
     padding: 6px 12px;
     border: 1px solid #ddd;
     color: #666;
+    background-color: #f9f9f9;
 }
 
 .sub-tabs .sub-btn.active {
     background: var(--secondary);
     color: white;
     border-color: var(--secondary);
+    box-shadow: none;
 }
