@@ -59,21 +59,21 @@ function getCategoryEmoji(category) {
 // FILTRO NIVEL 1 (GRUPOS)
 window.filterReservaMenu = function(group) {
     currentFilterGroup = group;
-    currentSubFilter = 'Todos'; // Reset subfiltro
+    currentSubFilter = 'Todos'; 
     
-    // Activar botón visualmente
+   
     document.querySelectorAll('#mainTabs .reserva-tab-btn').forEach(btn => {
         if(btn.innerText === group) btn.classList.add('active');
         else btn.classList.remove('active');
     });
 
-    // Manejar Sub-Filtros
+   
     const subTabsContainer = document.getElementById('subFilterTabs');
     if (group === 'Todos' || !CATEGORY_GROUPS[group]) {
         subTabsContainer.style.display = 'none';
         subTabsContainer.innerHTML = '';
     } else {
-        // Generar botones de subcategoría
+       
         const subCategories = CATEGORY_GROUPS[group];
         let buttonsHtml = `<button class="reserva-tab-btn sub-btn active" onclick="filterBySubCategory('Todos')">Ver Todo ${group}</button>`;
         
@@ -88,13 +88,13 @@ window.filterReservaMenu = function(group) {
     renderGrid();
 };
 
-// FILTRO NIVEL 2 (SUBCATEGORÍAS)
+
 window.filterBySubCategory = function(subCat) {
     currentSubFilter = subCat;
     
-    // Actualizar botones visualmente
+   
     document.querySelectorAll('.sub-btn').forEach(btn => {
-        // Comparación flexible para el botón "Ver Todo..."
+
         if(btn.innerText === subCat || (subCat === 'Todos' && btn.innerText.includes('Ver Todo'))) {
             btn.classList.add('active');
         } else {
@@ -121,18 +121,18 @@ function renderGrid() {
 
     let filteredDishes = allDishes;
 
-    // 1. Filtrar por Grupo Principal
+
     if (currentFilterGroup !== 'Todos') {
         const allowedCategories = CATEGORY_GROUPS[currentFilterGroup] || [];
         filteredDishes = allDishes.filter(d => allowedCategories.includes(d.category));
         
-        // 2. Filtrar por Subcategoría (si se seleccionó una específica)
+       
         if (currentSubFilter !== 'Todos') {
             filteredDishes = filteredDishes.filter(d => d.category === currentSubFilter);
         }
     }
 
-    // Tarjeta Especial "Arma tu Plato"
+
     let customCard = '';
     if (currentFilterGroup === 'Todos' || currentFilterGroup === 'Restaurante') {
         customCard = `
@@ -172,9 +172,6 @@ function renderGrid() {
     grid.innerHTML = customCard + dishesHtml;
 }
 
-// ... (Resto de funciones: changeQty, modal de arma tu plato, envío de formulario, etc. IGUAL QUE ANTES) ...
-// Copiar todo el resto del archivo anterior desde aquí hacia abajo
-// Para brevedad, pego aquí las funciones esenciales que no cambian:
 
 window.changeQty = function(id, delta, name, price) {
     const input = document.getElementById(`qty-${id}`);
@@ -516,4 +513,5 @@ window.closeModal = function() {
         document.getElementById('reservationForm').reset();
     }
 };
+
 
