@@ -15,7 +15,6 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // --- BASE DE DATOS SQLITE ---
-// Aseguramos que la carpeta exista para que Railway no falle
 const dbDir = path.join(__dirname, 'database');
 if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
@@ -24,7 +23,7 @@ if (!fs.existsSync(dbDir)) {
 const dbPath = path.join(dbDir, 'manacoffee.db');
 let db;
 
-// Promisificar consultas para usar async/await
+// Promisificar consultas
 const runAsync = (sql, params = []) => new Promise((resolve, reject) => {
     db.run(sql, params, function(err) { if(err) reject(err); else resolve({id:this.lastID}); });
 });
@@ -44,7 +43,7 @@ const initDB = () => new Promise((resolve, reject) => {
             console.log('✅ Conectado a SQLite en: ' + dbPath);
             try {
                 await createTables();
-                await seedDatabase(); // Carga el menú si está vacío
+                await seedDatabase();
                 resolve();
             } catch (error) {
                 reject(error);
@@ -66,15 +65,46 @@ const createTables = async () => {
     await runAsync(`INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)`, ['timeSlots', '["12:00-13:00", "13:00-14:00", "18:00-19:00", "19:00-20:00"]']);
 };
 
-// --- CARGA DEL MENÚ ---
+// --- CARGA DEL MENÚ (CORREGIDO) ---
 const seedDatabase = async () => {
     const res = await getAsync("SELECT COUNT(*) as count FROM dishes");
     if (res.count > 0) return; // Si ya hay platos, no hace nada
 
     console.log("🔄 Base de datos vacía. Cargando menú completo...");
 
-    // TU LISTA DE PLATOS ORIGINAL
-
+    // LISTA DE PLATOS INICIALES
+    const dishes = [
+        { 
+            cat: "Comida Rápida", 
+            name: "Hamburguesa Maná", 
+            price: 18000, 
+            desc: "Carne artesanal, queso, tocineta y vegetales frescos." 
+        },
+        { 
+            cat: "Comida Rápida", 
+            name: "Salchipapa Tradicional", 
+            price: 12000, 
+            desc: "Papas francesas, salchicha americana y salsas de la casa." 
+        },
+        { 
+            cat: "Comida Rápida", 
+            name: "Picada para dos", 
+            price: 35000, 
+            desc: "Chorizo, morcilla, carne de res, cerdo, papa criolla y arepa." 
+        },
+        { 
+            cat: "Cafetería", 
+            name: "Capuchino Especial", 
+            price: 6500, 
+            desc: "Café espresso con leche espumada y un toque de canela." 
+        },
+        { 
+            cat: "Cafetería", 
+            name: "Torta de Chocolate", 
+            price: 8000, 
+            desc: "Porción de torta casera bañada en chocolate." 
+        }
+    ];
 
     const stmt = db.prepare("INSERT INTO dishes (category, name, price, description) VALUES (?, ?, ?, ?)");
     dishes.forEach(d => stmt.run(d.cat, d.name, d.price, d.desc || ""));
@@ -109,6 +139,19 @@ app.post('/api/admin/login', async (req, res) => {
 app.post('/api/admin/logout', async (req, res) => {
     await runAsync('UPDATE admin SET token=NULL');
     res.json({ message: 'Bye' });
+});
+
+// Ruta faltante para cambiar contraseña
+app.put('/api/admin/password', requireAuth, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    try {
+        const admin = await getAsync('SELECT * FROM admin WHERE username=?', ['admin']);
+        if (admin.password !== currentPassword) {
+            return res.status(400).json({ error: 'Contraseña actual incorrecta' });
+        }
+        await runAsync('UPDATE admin SET password=? WHERE username=?', [newPassword, 'admin']);
+        res.json({ message: 'Contraseña actualizada' });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/dishes', async (req, res) => {
