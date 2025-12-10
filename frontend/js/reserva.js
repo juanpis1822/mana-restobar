@@ -4,7 +4,6 @@ let allDishes = [];
 let allTimeSlots = [];
 let currentOrderType = 'reserva';
 
-// LISTA DE INGREDIENTES PARA "ARMA TU PLATO"
 const INGREDIENTS = [
     { name: "Arroz", price: 4000 },
     { name: "Papas a la Francesa", price: 5200 },
@@ -23,17 +22,32 @@ const INGREDIENTS = [
     { name: "Papas locas", price: 9900 }
 ];
 
-// Objeto para guardar cantidades temporales { "Arroz": 2, "Papas": 1 }
 let tempCustomQuantities = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
     renderMenuForReservation();
     setupReservationForm();
     loadReservationConfig();
-    renderIngredientsList(); // Renderizar lista con contadores
+    renderIngredientsList();
 });
 
-// ... (Funciones de Configuración y Horarios IGUAL QUE ANTES) ...
+// Función de emojis (reutilizada)
+function getCategoryEmoji(category) {
+    const emojis = {
+        'Clásicos Café': '☕', 'Nevados': '🍧', 'Frappés': '🥤', 'Malteadas': '🍦', 
+        'Bebidas Calientes': '🍵', 'Repostería': '🍰', 'Postres': '🍮', 'Antojos': '🥐', 
+        'Adicionales Dulces': '🍬', 'Desayunos': '🍳', 'Huevos': '🥚', 'Adicionales Sal': '🧀', 
+        'Carnes': '🥩', 'Aves': '🍗', 'Mariscos': '🍤', 'Ceviches': '🍋', 'Ensaladas': '🥗', 
+        'Adicionales Almuerzo': '🍚', 'Hamburguesas': '🍔', 'Perros Calientes': '🌭', 
+        'Desgranados': '🌽', 'Picadas': '🍖', 'Sandwiches': '🥪', 'Patacones': '🍌', 
+        'Salchipapas': '🍟', 'Wraps': '🌯', 'Vegetariano': '🥦', 'Infantil': '🧒', 
+        'Jugos Agua': '🧃', 'Jugos Leche': '🥛', 'Limonadas': '🍋', 'Sodas': '🫧', 
+        'Mocktails': '🍹', 'Micheladas': '🍻', 'Cócteles': '🍸', 'Cervezas': '🍺', 
+        'Vinos': '🍷', 'Otras Bebidas': '🥤'
+    };
+    return emojis[category] || '🍽️';
+}
+
 window.setOrderType = function(type) {
     currentOrderType = type;
     document.getElementById('orderType').value = type;
@@ -129,9 +143,6 @@ async function checkSlotCapacity(dateStr, timeSlot) {
     } catch (err) { console.error(err); }
 }
 
-// =========================================================
-// 3. MENÚ (MODIFICADO PARA INCLUIR TARJETA "ARMA TU PLATO")
-// =========================================================
 async function renderMenuForReservation() {
     try {
         const response = await fetch(API_URL + '/dishes');
@@ -139,7 +150,6 @@ async function renderMenuForReservation() {
         const grid = document.getElementById('reservaMenuGrid');
         if (!grid) return;
 
-        // Tarjeta Especial de "Arma tu Plato"
         const customCard = `
             <div class="reserva-menu-item special-card" onclick="openCustomPlateModal()">
                 <div class="reserva-menu-item-icon" style="background: #fdf2e9; color: var(--primary); display:flex; justify-content:center; align-items:center;">
@@ -158,7 +168,11 @@ async function renderMenuForReservation() {
 
         const dishesHtml = allDishes.map(m => `
             <div class="reserva-menu-item">
-                <div class="reserva-menu-item-icon">${m.image ? `<img src="${m.image}" alt="${m.name}">` : '🍽️'}</div>
+                <div class="reserva-menu-item-icon" style="${!m.image ? 'display:flex;align-items:center;justify-content:center;background:#fff;' : ''}">
+                    ${m.image 
+                        ? `<img src="${m.image}" alt="${m.name}">` 
+                        : `<span style="font-size: 3rem;">${getCategoryEmoji(m.category)}</span>`}
+                </div>
                 <h4>${m.name}</h4>
                 <span class="price">$${m.price.toLocaleString('es-CO')}</span>
                 <div class="qty-control">
@@ -174,7 +188,6 @@ async function renderMenuForReservation() {
     } catch (err) { console.error(err); }
 }
 
-// Función auxiliar para los botones +/- del menú principal
 window.changeQty = function(id, delta, name, price) {
     const input = document.getElementById(`qty-${id}`);
     let newVal = parseInt(input.value) + delta;
@@ -187,15 +200,10 @@ window.changeQty = function(id, delta, name, price) {
     updateReservationSummary();
 };
 
-// Función para actualizar desde el input manual (si alguien escribe)
 window.updateReservationItem = function(id, qty, name, price) {
-    // Ya no se usa directamente, pero se deja por compatibilidad si es necesario
-    changeQty(id, 0, name, price); // Lógica manejada arriba
+    changeQty(id, 0, name, price);
 };
 
-// =========================================================
-// LÓGICA DE "ARMA TU PLATO" CON CANTIDADES
-// =========================================================
 function renderIngredientsList() {
     const list = document.getElementById('ingredientsList');
     if(!list) return;
@@ -215,8 +223,7 @@ function renderIngredientsList() {
 }
 
 window.openCustomPlateModal = function() {
-    tempCustomQuantities = {}; // Reiniciar cantidades
-    // Resetear visualmente todos los contadores a 0
+    tempCustomQuantities = {}; 
     INGREDIENTS.forEach((_, index) => {
         const display = document.getElementById(`ing-qty-${index}`);
         if(display) display.textContent = "0";
@@ -232,25 +239,17 @@ window.closeCustomPlateModal = function() {
 window.updateIngQty = function(index, delta) {
     const ingredient = INGREDIENTS[index];
     const display = document.getElementById(`ing-qty-${index}`);
-    
-    // Obtener valor actual o iniciar en 0
     let currentQty = tempCustomQuantities[ingredient.name] || 0;
     let newQty = currentQty + delta;
-    
     if (newQty < 0) newQty = 0;
-    
-    // Guardar o borrar del objeto temporal
     if (newQty > 0) {
         tempCustomQuantities[ingredient.name] = newQty;
     } else {
         delete tempCustomQuantities[ingredient.name];
     }
-    
-    // Actualizar vista
     display.textContent = newQty;
     display.style.color = newQty > 0 ? 'var(--primary)' : '#666';
     display.style.fontWeight = newQty > 0 ? 'bold' : 'normal';
-    
     calculateCustomTotal();
 };
 
@@ -265,12 +264,9 @@ function calculateCustomTotal() {
 
 window.addCustomPlateToOrder = function() {
     const ingredientNames = Object.keys(tempCustomQuantities);
-    
     if(ingredientNames.length === 0) return alert("Selecciona al menos una porción.");
-
     let totalPlatePrice = 0;
     let descriptionParts = [];
-
     for (const [name, qty] of Object.entries(tempCustomQuantities)) {
         const ing = INGREDIENTS.find(i => i.name === name);
         if (ing) {
@@ -278,28 +274,21 @@ window.addCustomPlateToOrder = function() {
             descriptionParts.push(`${qty}x ${name}`);
         }
     }
-
-    const customId = 'custom_' + Date.now(); // ID único para este plato armado
-
-    // Agregar a selectedItems como un solo ítem "Plato Armado"
+    const customId = 'custom_' + Date.now(); 
     selectedItems[customId] = {
         name: `Armado: ${descriptionParts.join(', ')}`,
         price: totalPlatePrice,
-        qty: 1, // Es 1 plato compuesto por varios ingredientes
+        qty: 1, 
         subtotal: totalPlatePrice
     };
-
     updateReservationSummary();
     closeCustomPlateModal();
 };
 
-// Función para borrar ítems del resumen (útil para los personalizados)
 window.removeItem = function(id) {
     delete selectedItems[id];
-    // Si es un ítem de menú normal, resetear su input visual
     const input = document.getElementById(`qty-${id}`);
     if(input) input.value = 0;
-    
     updateReservationSummary();
 };
 
@@ -311,8 +300,6 @@ function updateReservationSummary() {
     if (items.length > 0) {
         let total = 0;
         let html = '';
-        
-        // Convertir el objeto selectedItems en array para poder iterar con las llaves (IDs)
         for (const [id, item] of Object.entries(selectedItems)) {
             total += item.subtotal;
             html += `
@@ -325,7 +312,6 @@ function updateReservationSummary() {
                 </div>`;
         }
         summaryDiv.innerHTML = html;
-
         if (currentOrderType === 'domicilio') total += 1000;
         totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
     } else {
@@ -334,7 +320,6 @@ function updateReservationSummary() {
     }
 }
 
-// ... (Resto del código de envío y WhatsApp igual) ...
 function setupReservationForm() {
     const form = document.getElementById('reservationForm');
     if (form) form.addEventListener('submit', handleFormSubmit);
