@@ -6,30 +6,6 @@
     <title>Menú - Maná Restobar</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .menu-filters {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 2rem;
-        }
-        .filter-btn {
-            font-size: 0.85rem;
-            padding: 0.5rem 0.8rem;
-        }
-        .filter-header {
-            width: 100%; 
-            text-align: center; 
-            color: var(--primary); 
-            margin: 15px 0 5px 0; 
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-    </style>
 </head>
 <body>
     
@@ -55,53 +31,93 @@
             <h1 class="section-title">Nuestro Menú</h1>
             <p class="menu-subtitle">Descubre nuestras deliciosas opciones</p>
 
-            <section class="menu-filters">
-                <button class="filter-btn active" onclick="filterMenu('all')">Todos</button>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <button class="filter-btn active" onclick="filterMenu('all')">Ver Todo el Menú</button>
+            </div>
+
+            <section class="menu-accordions">
                 
-                <h4 class="filter-header">Cafetería y Repostería</h4>
-                <button class="filter-btn" onclick="filterMenu('Clásicos Café')">Clásicos</button>
-                <button class="filter-btn" onclick="filterMenu('Nevados')">Nevados</button>
-                <button class="filter-btn" onclick="filterMenu('Frappés')">Frappés</button>
-                <button class="filter-btn" onclick="filterMenu('Malteadas')">Malteadas</button>
-                <button class="filter-btn" onclick="filterMenu('Bebidas Calientes')">Calientes</button>
-                <button class="filter-btn" onclick="filterMenu('Repostería')">Repostería</button>
-                <button class="filter-btn" onclick="filterMenu('Postres')">Postres</button>
-                <button class="filter-btn" onclick="filterMenu('Antojos')">Antojos</button>
-                <button class="filter-btn" onclick="filterMenu('Adicionales Dulces')">Adic. Dulces</button>
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>☕ Cafetería y Repostería</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="filter-group">
+                            <button class="filter-btn" onclick="filterMenu('Clásicos Café')">Clásicos</button>
+                            <button class="filter-btn" onclick="filterMenu('Nevados')">Nevados</button>
+                            <button class="filter-btn" onclick="filterMenu('Frappés')">Frappés</button>
+                            <button class="filter-btn" onclick="filterMenu('Malteadas')">Malteadas</button>
+                            <button class="filter-btn" onclick="filterMenu('Bebidas Calientes')">Calientes</button>
+                            <button class="filter-btn" onclick="filterMenu('Repostería')">Repostería</button>
+                            <button class="filter-btn" onclick="filterMenu('Postres')">Postres</button>
+                            <button class="filter-btn" onclick="filterMenu('Antojos')">Antojos</button>
+                            <button class="filter-btn" onclick="filterMenu('Adicionales Dulces')">Adic. Dulces</button>
+                        </div>
+                    </div>
+                </div>
 
-                <h4 class="filter-header">Restaurante</h4>
-                <button class="filter-btn" onclick="filterMenu('Desayunos')">Desayunos</button>
-                <button class="filter-btn" onclick="filterMenu('Huevos')">Huevos</button>
-                <button class="filter-btn" onclick="filterMenu('Carnes')">Carnes</button>
-                <button class="filter-btn" onclick="filterMenu('Aves')">Aves</button>
-                <button class="filter-btn" onclick="filterMenu('Mariscos')">Mariscos</button>
-                <button class="filter-btn" onclick="filterMenu('Ceviches')">Ceviches</button>
-                <button class="filter-btn" onclick="filterMenu('Ensaladas')">Ensaladas</button>
-                <button class="filter-btn" onclick="filterMenu('Adicionales Almuerzo')">Adic. Almuerzo</button>
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>🍽️ Restaurante</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="filter-group">
+                            <button class="filter-btn" onclick="filterMenu('Desayunos')">Desayunos</button>
+                            <button class="filter-btn" onclick="filterMenu('Huevos')">Huevos</button>
+                            <button class="filter-btn" onclick="filterMenu('Carnes')">Carnes</button>
+                            <button class="filter-btn" onclick="filterMenu('Aves')">Aves</button>
+                            <button class="filter-btn" onclick="filterMenu('Mariscos')">Mariscos</button>
+                            <button class="filter-btn" onclick="filterMenu('Ceviches')">Ceviches</button>
+                            <button class="filter-btn" onclick="filterMenu('Ensaladas')">Ensaladas</button>
+                            <button class="filter-btn" onclick="filterMenu('Adicionales Almuerzo')">Adic. Almuerzo</button>
+                        </div>
+                    </div>
+                </div>
 
-                <h4 class="filter-header">Comida Rápida</h4>
-                <button class="filter-btn" onclick="filterMenu('Hamburguesas')">Hamburguesas</button>
-                <button class="filter-btn" onclick="filterMenu('Perros Calientes')">Perros</button>
-                <button class="filter-btn" onclick="filterMenu('Salchipapas')">Salchipapas</button>
-                <button class="filter-btn" onclick="filterMenu('Desgranados')">Desgranados</button>
-                <button class="filter-btn" onclick="filterMenu('Picadas')">Picadas</button>
-                <button class="filter-btn" onclick="filterMenu('Sandwiches')">Sandwiches</button>
-                <button class="filter-btn" onclick="filterMenu('Patacones')">Patacones</button>
-                <button class="filter-btn" onclick="filterMenu('Wraps')">Wraps</button>
-                <button class="filter-btn" onclick="filterMenu('Vegetariano')">Vegetariano</button>
-                <button class="filter-btn" onclick="filterMenu('Infantil')">Infantil</button>
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>🍔 Comida Rápida</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="filter-group">
+                            <button class="filter-btn" onclick="filterMenu('Hamburguesas')">Hamburguesas</button>
+                            <button class="filter-btn" onclick="filterMenu('Perros Calientes')">Perros</button>
+                            <button class="filter-btn" onclick="filterMenu('Salchipapas')">Salchipapas</button>
+                            <button class="filter-btn" onclick="filterMenu('Desgranados')">Desgranados</button>
+                            <button class="filter-btn" onclick="filterMenu('Picadas')">Picadas</button>
+                            <button class="filter-btn" onclick="filterMenu('Sandwiches')">Sandwiches</button>
+                            <button class="filter-btn" onclick="filterMenu('Patacones')">Patacones</button>
+                            <button class="filter-btn" onclick="filterMenu('Wraps')">Wraps</button>
+                            <button class="filter-btn" onclick="filterMenu('Vegetariano')">Vegetariano</button>
+                            <button class="filter-btn" onclick="filterMenu('Infantil')">Infantil</button>
+                        </div>
+                    </div>
+                </div>
 
-                <h4 class="filter-header">Bebidas y Licores</h4>
-                <button class="filter-btn" onclick="filterMenu('Jugos Agua')">Jugos Agua</button>
-                <button class="filter-btn" onclick="filterMenu('Jugos Leche')">Jugos Leche</button>
-                <button class="filter-btn" onclick="filterMenu('Limonadas')">Limonadas</button>
-                <button class="filter-btn" onclick="filterMenu('Sodas')">Sodas</button>
-                <button class="filter-btn" onclick="filterMenu('Mocktails')">Mocktails</button>
-                <button class="filter-btn" onclick="filterMenu('Micheladas')">Micheladas</button>
-                <button class="filter-btn" onclick="filterMenu('Cócteles')">Cócteles</button>
-                <button class="filter-btn" onclick="filterMenu('Cervezas')">Cervezas</button>
-                <button class="filter-btn" onclick="filterMenu('Vinos')">Vinos</button>
-                <button class="filter-btn" onclick="filterMenu('Otras Bebidas')">Otras</button>
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span>🍹 Bebidas y Licores</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="filter-group">
+                            <button class="filter-btn" onclick="filterMenu('Jugos Agua')">Jugos Agua</button>
+                            <button class="filter-btn" onclick="filterMenu('Jugos Leche')">Jugos Leche</button>
+                            <button class="filter-btn" onclick="filterMenu('Limonadas')">Limonadas</button>
+                            <button class="filter-btn" onclick="filterMenu('Sodas')">Sodas</button>
+                            <button class="filter-btn" onclick="filterMenu('Mocktails')">Mocktails</button>
+                            <button class="filter-btn" onclick="filterMenu('Micheladas')">Micheladas</button>
+                            <button class="filter-btn" onclick="filterMenu('Cócteles')">Cócteles</button>
+                            <button class="filter-btn" onclick="filterMenu('Cervezas')">Cervezas</button>
+                            <button class="filter-btn" onclick="filterMenu('Vinos')">Vinos</button>
+                            <button class="filter-btn" onclick="filterMenu('Otras Bebidas')">Otras</button>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <section class="menu-grid" id="menuGrid">
