@@ -489,7 +489,7 @@ ${platosTexto}
 Quedo atento a su confirmacion!`;
     }
 
-    const whatsappLink = `https://api.whatsapp.com/send?phone=573143258525&text=${encodeURIComponent(text)}`;
+    const whatsappLink = `https://api.whatsapp.com/send?phone=573150118386&text=${encodeURIComponent(text)}`;
 
     msg.innerHTML = `
         <div style="text-align:left; margin-top:1rem;">
@@ -516,3 +516,4 @@ window.closeModal = function() {
         document.getElementById('reservationForm').reset();
     }
 };
+
