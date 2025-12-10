@@ -458,3 +458,120 @@ button, input, select, textarea { font-family: inherit; }
     flex-grow: 1; /* Para que ocupen espacio equitativo */
     max-width: 200px;
 }
+/* ==========================================================================
+   NUEVOS ESTILOS: CONTROLES DE CANTIDAD (ARMA TU PLATO & MENÚ)
+   ========================================================================== */
+
+/* Estilos para el modal de Arma tu Plato */
+.ingredients-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.ingredient-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    transition: all 0.2s;
+}
+
+.ingredient-item:hover {
+    background: #fff;
+    border-color: var(--secondary);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.ing-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.ing-info span {
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.ing-info strong {
+    font-size: 0.85rem;
+    color: var(--secondary);
+}
+
+.ing-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    padding: 4px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+}
+
+.btn-qty {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--light);
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-qty:hover {
+    background: var(--secondary);
+    color: #fff;
+}
+
+.btn-qty:active {
+    transform: scale(0.9);
+}
+
+.qty-display {
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    user-select: none;
+}
+
+/* Estilos para los botones +/- en las tarjetas del menú general */
+.qty-control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.qty-control button {
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.qty-control input {
+    width: 40px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+    font-weight: bold;
+}
