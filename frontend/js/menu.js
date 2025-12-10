@@ -7,30 +7,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAccordions();
 });
 
-// --- FUNCIÓN INTELIGENTE DE EMOJIS ---
+
 function getCategoryEmoji(category) {
     const emojis = {
-        // Cafetería
         'Clásicos Café': '☕', 'Nevados': '🍧', 'Frappés': '🥤', 
         'Malteadas': '🍦', 'Bebidas Calientes': '🍵', 'Repostería': '🍰', 
         'Postres': '🍮', 'Antojos': '🥐', 'Adicionales Dulces': '🍬',
-        
-        // Restaurante
         'Desayunos': '🍳', 'Huevos': '🥚', 'Adicionales Sal': '🧀', 
         'Carnes': '🥩', 'Aves': '🍗', 'Mariscos': '🍤', 
         'Ceviches': '🍋', 'Ensaladas': '🥗', 'Adicionales Almuerzo': '🍚',
-        
-        // Comida Rápida
         'Hamburguesas': '🍔', 'Perros Calientes': '🌭', 'Desgranados': '🌽', 
         'Picadas': '🍖', 'Sandwiches': '🥪', 'Patacones': '🍌', 
         'Salchipapas': '🍟', 'Wraps': '🌯', 'Vegetariano': '🥦', 'Infantil': '🧒',
-        
-        // Bebidas
         'Jugos Agua': '🧃', 'Jugos Leche': '🥛', 'Limonadas': '🍋', 
         'Sodas': '🫧', 'Mocktails': '🍹', 'Micheladas': '🍻', 
         'Cócteles': '🍸', 'Cervezas': '🍺', 'Vinos': '🍷', 'Otras Bebidas': '🥤'
     };
-    return emojis[category] || '🍽️'; // Emoji por defecto
+    return emojis[category] || '🍽️'; 
 }
 
 async function renderMenuItems() {
@@ -123,3 +116,4 @@ window.filterMenu = function(cat) {
         }
     });
 };
+
