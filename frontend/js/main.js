@@ -20,7 +20,7 @@ function setupHamburgerMenu() {
         // Abrir/Cerrar menú al tocar el icono
         hamburger.addEventListener('click', () => {
             navMenu.classList.toggle('active');
-            hamburger.classList.toggle('active'); // Para animar el icono si se desea
+            hamburger.classList.toggle('active'); 
         });
 
         // Cerrar menú al tocar cualquier enlace
@@ -49,10 +49,9 @@ function highlightCurrentPage() {
     const navLinks = document.querySelectorAll('.nav-menu a');
 
     navLinks.forEach(link => {
-        // Limpiamos clases activas previas
+
         link.classList.remove('active');
-        
-        // Si el href del link coincide con la página actual, lo marcamos
+
         if (link.getAttribute('href') === currentPage) {
             link.classList.add('active');
         }
@@ -86,14 +85,7 @@ function startCarousel() {
     // Iniciar intervalo automático
     const slideInterval = setInterval(nextSlide, intervalTime);
 
-    // Opcional: Detener carrusel si el usuario pasa el mouse (para leer)
-    /*
-    const sliderContainer = document.querySelector('.hero-slider');
-    if(sliderContainer) {
-        sliderContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
-        sliderContainer.addEventListener('mouseleave', () => setInterval(nextSlide, intervalTime));
-    }
-    */
+
 }
 
 // --------------------------------------------------------------------------
