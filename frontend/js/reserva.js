@@ -3,7 +3,8 @@ let selectedItems = {};
 let allDishes = [];
 let allTimeSlots = [];
 let currentOrderType = 'reserva';
-let currentFilter = 'Todos'; // Filtro inicial
+let currentFilterGroup = 'Todos';
+let currentSubFilter = 'Todos';
 
 const INGREDIENTS = [
     { name: "Arroz", price: 4000 },
@@ -25,20 +26,19 @@ const INGREDIENTS = [
 
 let tempCustomQuantities = {}; 
 
-document.addEventListener('DOMContentLoaded', () => {
-    renderMenuForReservation();
-    setupReservationForm();
-    loadReservationConfig();
-    renderIngredientsList();
-});
-
-// MAPA DE CATEGORÍAS PARA FILTRADO AGRUPADO
 const CATEGORY_GROUPS = {
     'Comida Rápida': ['Hamburguesas', 'Perros Calientes', 'Salchipapas', 'Desgranados', 'Picadas', 'Sandwiches', 'Patacones', 'Wraps', 'Vegetariano', 'Infantil'],
     'Restaurante': ['Desayunos', 'Huevos', 'Carnes', 'Aves', 'Mariscos', 'Ceviches', 'Ensaladas'],
     'Cafetería': ['Clásicos Café', 'Nevados', 'Frappés', 'Malteadas', 'Bebidas Calientes', 'Repostería', 'Postres', 'Antojos'],
     'Bebidas': ['Jugos Agua', 'Jugos Leche', 'Limonadas', 'Sodas', 'Mocktails', 'Micheladas', 'Cócteles', 'Cervezas', 'Vinos', 'Otras Bebidas']
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderMenuForReservation();
+    setupReservationForm();
+    loadReservationConfig();
+    renderIngredientsList();
+});
 
 function getCategoryEmoji(category) {
     const emojis = {
@@ -56,17 +56,236 @@ function getCategoryEmoji(category) {
     return emojis[category] || '🍽️';
 }
 
-window.filterReservaMenu = function(filter) {
-    currentFilter = filter;
+// FILTRO NIVEL 1 (GRUPOS)
+window.filterReservaMenu = function(group) {
+    currentFilterGroup = group;
+    currentSubFilter = 'Todos'; // Reset subfiltro
     
-    // Actualizar botones visualmente
-    document.querySelectorAll('.reserva-tab-btn').forEach(btn => {
-        if(btn.innerText === filter) btn.classList.add('active');
+    // Activar botón visualmente
+    document.querySelectorAll('#mainTabs .reserva-tab-btn').forEach(btn => {
+        if(btn.innerText === group) btn.classList.add('active');
         else btn.classList.remove('active');
     });
 
-    renderMenuForReservation(); // Re-renderizar con filtro aplicado
+    // Manejar Sub-Filtros
+    const subTabsContainer = document.getElementById('subFilterTabs');
+    if (group === 'Todos' || !CATEGORY_GROUPS[group]) {
+        subTabsContainer.style.display = 'none';
+        subTabsContainer.innerHTML = '';
+    } else {
+        // Generar botones de subcategoría
+        const subCategories = CATEGORY_GROUPS[group];
+        let buttonsHtml = `<button class="reserva-tab-btn sub-btn active" onclick="filterBySubCategory('Todos')">Ver Todo ${group}</button>`;
+        
+        subCategories.forEach(sub => {
+            buttonsHtml += `<button class="reserva-tab-btn sub-btn" onclick="filterBySubCategory('${sub}')">${sub}</button>`;
+        });
+        
+        subTabsContainer.innerHTML = buttonsHtml;
+        subTabsContainer.style.display = 'flex';
+    }
+
+    renderGrid();
 };
+
+// FILTRO NIVEL 2 (SUBCATEGORÍAS)
+window.filterBySubCategory = function(subCat) {
+    currentSubFilter = subCat;
+    
+    // Actualizar botones visualmente
+    document.querySelectorAll('.sub-btn').forEach(btn => {
+        // Comparación flexible para el botón "Ver Todo..."
+        if(btn.innerText === subCat || (subCat === 'Todos' && btn.innerText.includes('Ver Todo'))) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    renderGrid();
+};
+
+async function renderMenuForReservation() {
+    if (allDishes.length === 0) {
+        try {
+            const response = await fetch(API_URL + '/dishes');
+            allDishes = await response.json();
+        } catch (e) { console.error(e); }
+    }
+    renderGrid();
+}
+
+function renderGrid() {
+    const grid = document.getElementById('reservaMenuGrid');
+    if (!grid) return;
+
+    let filteredDishes = allDishes;
+
+    // 1. Filtrar por Grupo Principal
+    if (currentFilterGroup !== 'Todos') {
+        const allowedCategories = CATEGORY_GROUPS[currentFilterGroup] || [];
+        filteredDishes = allDishes.filter(d => allowedCategories.includes(d.category));
+        
+        // 2. Filtrar por Subcategoría (si se seleccionó una específica)
+        if (currentSubFilter !== 'Todos') {
+            filteredDishes = filteredDishes.filter(d => d.category === currentSubFilter);
+        }
+    }
+
+    // Tarjeta Especial "Arma tu Plato"
+    let customCard = '';
+    if (currentFilterGroup === 'Todos' || currentFilterGroup === 'Restaurante') {
+        customCard = `
+            <div class="reserva-menu-item special-card" onclick="openCustomPlateModal()">
+                <div class="reserva-menu-item-icon" style="background: #fdf2e9; color: var(--primary); display:flex; justify-content:center; align-items:center;">
+                    <i class="fa-solid fa-utensils" style="font-size: 3rem;"></i>
+                </div>
+                <h4>🛠️ Arma tu Plato</h4>
+                <span class="price">A tu gusto</span>
+                <button type="button" class="btn btn-sm btn-primary" style="margin-top:5px; width:100%;">Empezar</button>
+            </div>
+        `;
+    }
+
+    if (filteredDishes.length === 0 && !customCard) {
+        grid.innerHTML = '<p style="text-align:center;color:#999;grid-column:1/-1;">No hay platos en esta sección.</p>';
+        return;
+    }
+
+    const dishesHtml = filteredDishes.map(m => `
+        <div class="reserva-menu-item">
+            <div class="reserva-menu-item-icon" style="${!m.image ? 'display:flex;align-items:center;justify-content:center;background:#fff;' : ''}">
+                ${m.image 
+                    ? `<img src="${m.image}" alt="${m.name}">` 
+                    : `<span style="font-size: 3rem;">${getCategoryEmoji(m.category)}</span>`}
+            </div>
+            <h4>${m.name}</h4>
+            <span class="price">$${m.price.toLocaleString('es-CO')}</span>
+            <div class="qty-control">
+                <button type="button" onclick="changeQty(${m.id}, -1, '${m.name}', ${m.price})">-</button>
+                <input type="number" id="qty-${m.id}" value="${selectedItems[m.id] ? selectedItems[m.id].qty : 0}" readonly>
+                <button type="button" onclick="changeQty(${m.id}, 1, '${m.name}', ${m.price})">+</button>
+            </div>
+        </div>
+    `).join('');
+
+    grid.innerHTML = customCard + dishesHtml;
+}
+
+// ... (Resto de funciones: changeQty, modal de arma tu plato, envío de formulario, etc. IGUAL QUE ANTES) ...
+// Copiar todo el resto del archivo anterior desde aquí hacia abajo
+// Para brevedad, pego aquí las funciones esenciales que no cambian:
+
+window.changeQty = function(id, delta, name, price) {
+    const input = document.getElementById(`qty-${id}`);
+    if (!input) return; 
+    let newVal = parseInt(input.value) + delta;
+    if (newVal < 0) newVal = 0;
+    input.value = newVal;
+    if (newVal > 0) selectedItems[id] = { name, price, qty: newVal, subtotal: newVal * price };
+    else delete selectedItems[id];
+    updateReservationSummary();
+};
+
+window.updateReservationItem = function(id, qty, name, price) { changeQty(id, 0, name, price); };
+
+function renderIngredientsList() {
+    const list = document.getElementById('ingredientsList');
+    if(!list) return;
+    list.innerHTML = INGREDIENTS.map((ing, index) => `
+        <div class="ingredient-item">
+            <div class="ing-info">
+                <span>${ing.name}</span>
+                <strong>$${ing.price.toLocaleString('es-CO')}</strong>
+            </div>
+            <div class="ing-controls">
+                <button type="button" class="btn-qty" onclick="updateIngQty(${index}, -1)">-</button>
+                <span id="ing-qty-${index}" class="qty-display">0</span>
+                <button type="button" class="btn-qty" onclick="updateIngQty(${index}, 1)">+</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.openCustomPlateModal = function() {
+    tempCustomQuantities = {}; 
+    INGREDIENTS.forEach((_, index) => {
+        const display = document.getElementById(`ing-qty-${index}`);
+        if(display) display.textContent = "0";
+    });
+    document.getElementById('customTotal').textContent = "$0";
+    document.getElementById('customPlateModal').style.display = 'flex';
+};
+
+window.closeCustomPlateModal = function() { document.getElementById('customPlateModal').style.display = 'none'; };
+
+window.updateIngQty = function(index, delta) {
+    const ingredient = INGREDIENTS[index];
+    const display = document.getElementById(`ing-qty-${index}`);
+    let currentQty = tempCustomQuantities[ingredient.name] || 0;
+    let newQty = currentQty + delta;
+    if (newQty < 0) newQty = 0;
+    if (newQty > 0) tempCustomQuantities[ingredient.name] = newQty;
+    else delete tempCustomQuantities[ingredient.name];
+    display.textContent = newQty;
+    display.style.color = newQty > 0 ? 'var(--primary)' : '#666';
+    display.style.fontWeight = newQty > 0 ? 'bold' : 'normal';
+    calculateCustomTotal();
+};
+
+function calculateCustomTotal() {
+    let total = 0;
+    for (const [name, qty] of Object.entries(tempCustomQuantities)) {
+        const ing = INGREDIENTS.find(i => i.name === name);
+        if (ing) total += ing.price * qty;
+    }
+    document.getElementById('customTotal').textContent = `$${total.toLocaleString('es-CO')}`;
+}
+
+window.addCustomPlateToOrder = function() {
+    const ingredientNames = Object.keys(tempCustomQuantities);
+    if(ingredientNames.length === 0) return alert("Selecciona al menos una porción.");
+    let totalPlatePrice = 0;
+    let descriptionParts = [];
+    for (const [name, qty] of Object.entries(tempCustomQuantities)) {
+        const ing = INGREDIENTS.find(i => i.name === name);
+        if (ing) {
+            totalPlatePrice += ing.price * qty;
+            descriptionParts.push(`${qty}x ${name}`);
+        }
+    }
+    const customId = 'custom_' + Date.now(); 
+    selectedItems[customId] = { name: `Armado: ${descriptionParts.join(', ')}`, price: totalPlatePrice, qty: 1, subtotal: totalPlatePrice };
+    updateReservationSummary();
+    closeCustomPlateModal();
+};
+
+window.removeItem = function(id) {
+    delete selectedItems[id];
+    const input = document.getElementById(`qty-${id}`);
+    if(input) input.value = 0;
+    updateReservationSummary();
+};
+
+function updateReservationSummary() {
+    const items = Object.values(selectedItems);
+    const summaryDiv = document.getElementById('summaryItems');
+    const totalEl = document.getElementById('totalPrice');
+    if (items.length > 0) {
+        let total = 0;
+        let html = '';
+        for (const [id, item] of Object.entries(selectedItems)) {
+            total += item.subtotal;
+            html += `<div class="summary-item"><div style="flex:1;"><span style="display:block; font-weight:bold;">${item.name}</span><small>Cant: ${item.qty} | $${item.subtotal.toLocaleString('es-CO')}</small></div><button type="button" onclick="removeItem('${id}')" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">×</button></div>`;
+        }
+        summaryDiv.innerHTML = html;
+        if (currentOrderType === 'domicilio') total += 1000;
+        totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
+    } else {
+        summaryDiv.innerHTML = '<p class="empty-msg" style="text-align:center;color:#999;">Ningún plato seleccionado</p>';
+        totalEl.textContent = '$0';
+    }
+}
 
 window.setOrderType = function(type) {
     currentOrderType = type;
@@ -161,196 +380,6 @@ async function checkSlotCapacity(dateStr, timeSlot) {
             }
         }
     } catch (err) { console.error(err); }
-}
-
-async function renderMenuForReservation() {
-    try {
-        if (allDishes.length === 0) {
-            const response = await fetch(API_URL + '/dishes');
-            allDishes = await response.json();
-        }
-        
-        const grid = document.getElementById('reservaMenuGrid');
-        if (!grid) return;
-
-        // FILTRAR PLATOS
-        let filteredDishes = allDishes;
-        if (currentFilter !== 'Todos') {
-            const allowedCategories = CATEGORY_GROUPS[currentFilter] || [];
-            filteredDishes = allDishes.filter(d => allowedCategories.includes(d.category));
-        }
-
-        // Tarjeta Especial de "Arma tu Plato" (Solo visible en Todos o Restaurante)
-        let customCard = '';
-        if (currentFilter === 'Todos' || currentFilter === 'Restaurante') {
-            customCard = `
-                <div class="reserva-menu-item special-card" onclick="openCustomPlateModal()">
-                    <div class="reserva-menu-item-icon" style="background: #fdf2e9; color: var(--primary); display:flex; justify-content:center; align-items:center;">
-                        <i class="fa-solid fa-utensils" style="font-size: 3rem;"></i>
-                    </div>
-                    <h4>🛠️ Arma tu Plato</h4>
-                    <span class="price">A tu gusto</span>
-                    <button type="button" class="btn btn-sm btn-primary" style="margin-top:5px; width:100%;">Empezar</button>
-                </div>
-            `;
-        }
-
-        if (filteredDishes.length === 0 && !customCard) {
-            grid.innerHTML = '<p style="text-align:center;color:#999;grid-column:1/-1;">No hay platos en esta categoría.</p>';
-            return;
-        }
-
-        const dishesHtml = filteredDishes.map(m => `
-            <div class="reserva-menu-item">
-                <div class="reserva-menu-item-icon" style="${!m.image ? 'display:flex;align-items:center;justify-content:center;background:#fff;' : ''}">
-                    ${m.image 
-                        ? `<img src="${m.image}" alt="${m.name}">` 
-                        : `<span style="font-size: 3rem;">${getCategoryEmoji(m.category)}</span>`}
-                </div>
-                <h4>${m.name}</h4>
-                <span class="price">$${m.price.toLocaleString('es-CO')}</span>
-                <div class="qty-control">
-                    <button type="button" onclick="changeQty(${m.id}, -1, '${m.name}', ${m.price})">-</button>
-                    <input type="number" id="qty-${m.id}" value="${selectedItems[m.id] ? selectedItems[m.id].qty : 0}" readonly>
-                    <button type="button" onclick="changeQty(${m.id}, 1, '${m.name}', ${m.price})">+</button>
-                </div>
-            </div>
-        `).join('');
-
-        grid.innerHTML = customCard + dishesHtml;
-
-    } catch (err) { console.error(err); }
-}
-
-window.changeQty = function(id, delta, name, price) {
-    const input = document.getElementById(`qty-${id}`);
-    if (!input) return; // Evita error si el plato no está visible actualmente
-    
-    let newVal = parseInt(input.value) + delta;
-    if (newVal < 0) newVal = 0;
-    input.value = newVal;
-    
-    if (newVal > 0) selectedItems[id] = { name, price, qty: newVal, subtotal: newVal * price };
-    else delete selectedItems[id];
-    
-    updateReservationSummary();
-};
-
-function renderIngredientsList() {
-    const list = document.getElementById('ingredientsList');
-    if(!list) return;
-    list.innerHTML = INGREDIENTS.map((ing, index) => `
-        <div class="ingredient-item">
-            <div class="ing-info">
-                <span>${ing.name}</span>
-                <strong>$${ing.price.toLocaleString('es-CO')}</strong>
-            </div>
-            <div class="ing-controls">
-                <button type="button" class="btn-qty" onclick="updateIngQty(${index}, -1)">-</button>
-                <span id="ing-qty-${index}" class="qty-display">0</span>
-                <button type="button" class="btn-qty" onclick="updateIngQty(${index}, 1)">+</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-window.openCustomPlateModal = function() {
-    tempCustomQuantities = {}; 
-    INGREDIENTS.forEach((_, index) => {
-        const display = document.getElementById(`ing-qty-${index}`);
-        if(display) display.textContent = "0";
-    });
-    document.getElementById('customTotal').textContent = "$0";
-    document.getElementById('customPlateModal').style.display = 'flex';
-};
-
-window.closeCustomPlateModal = function() {
-    document.getElementById('customPlateModal').style.display = 'none';
-};
-
-window.updateIngQty = function(index, delta) {
-    const ingredient = INGREDIENTS[index];
-    const display = document.getElementById(`ing-qty-${index}`);
-    let currentQty = tempCustomQuantities[ingredient.name] || 0;
-    let newQty = currentQty + delta;
-    if (newQty < 0) newQty = 0;
-    if (newQty > 0) {
-        tempCustomQuantities[ingredient.name] = newQty;
-    } else {
-        delete tempCustomQuantities[ingredient.name];
-    }
-    display.textContent = newQty;
-    display.style.color = newQty > 0 ? 'var(--primary)' : '#666';
-    display.style.fontWeight = newQty > 0 ? 'bold' : 'normal';
-    calculateCustomTotal();
-};
-
-function calculateCustomTotal() {
-    let total = 0;
-    for (const [name, qty] of Object.entries(tempCustomQuantities)) {
-        const ing = INGREDIENTS.find(i => i.name === name);
-        if (ing) total += ing.price * qty;
-    }
-    document.getElementById('customTotal').textContent = `$${total.toLocaleString('es-CO')}`;
-}
-
-window.addCustomPlateToOrder = function() {
-    const ingredientNames = Object.keys(tempCustomQuantities);
-    if(ingredientNames.length === 0) return alert("Selecciona al menos una porción.");
-    let totalPlatePrice = 0;
-    let descriptionParts = [];
-    for (const [name, qty] of Object.entries(tempCustomQuantities)) {
-        const ing = INGREDIENTS.find(i => i.name === name);
-        if (ing) {
-            totalPlatePrice += ing.price * qty;
-            descriptionParts.push(`${qty}x ${name}`);
-        }
-    }
-    const customId = 'custom_' + Date.now(); 
-    selectedItems[customId] = {
-        name: `Armado: ${descriptionParts.join(', ')}`,
-        price: totalPlatePrice,
-        qty: 1, 
-        subtotal: totalPlatePrice
-    };
-    updateReservationSummary();
-    closeCustomPlateModal();
-};
-
-window.removeItem = function(id) {
-    delete selectedItems[id];
-    // Intentar resetear input si está visible
-    const input = document.getElementById(`qty-${id}`);
-    if(input) input.value = 0;
-    updateReservationSummary();
-};
-
-function updateReservationSummary() {
-    const items = Object.values(selectedItems);
-    const summaryDiv = document.getElementById('summaryItems');
-    const totalEl = document.getElementById('totalPrice');
-
-    if (items.length > 0) {
-        let total = 0;
-        let html = '';
-        for (const [id, item] of Object.entries(selectedItems)) {
-            total += item.subtotal;
-            html += `
-                <div class="summary-item">
-                    <div style="flex:1;">
-                        <span style="display:block; font-weight:bold;">${item.name}</span>
-                        <small>Cant: ${item.qty} | $${item.subtotal.toLocaleString('es-CO')}</small>
-                    </div>
-                    <button type="button" onclick="removeItem('${id}')" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2rem;">&times;</button>
-                </div>`;
-        }
-        summaryDiv.innerHTML = html;
-        if (currentOrderType === 'domicilio') total += 1000;
-        totalEl.textContent = `$${total.toLocaleString('es-CO')}`;
-    } else {
-        summaryDiv.innerHTML = '<p class="empty-msg" style="text-align:center;color:#999;">Ningún plato seleccionado</p>';
-        totalEl.textContent = '$0';
-    }
 }
 
 function setupReservationForm() {
