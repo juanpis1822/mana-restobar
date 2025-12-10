@@ -8,6 +8,23 @@ function getHeaders() {
     };
 }
 
+// --- FUNCIÓN DE EMOJIS (PARA ADMIN TAMBIÉN) ---
+function getCategoryEmoji(category) {
+    const emojis = {
+        'Clásicos Café': '☕', 'Nevados': '🍧', 'Frappés': '🥤', 'Malteadas': '🍦', 
+        'Bebidas Calientes': '🍵', 'Repostería': '🍰', 'Postres': '🍮', 'Antojos': '🥐', 
+        'Adicionales Dulces': '🍬', 'Desayunos': '🍳', 'Huevos': '🥚', 'Adicionales Sal': '🧀', 
+        'Carnes': '🥩', 'Aves': '🍗', 'Mariscos': '🍤', 'Ceviches': '🍋', 'Ensaladas': '🥗', 
+        'Adicionales Almuerzo': '🍚', 'Hamburguesas': '🍔', 'Perros Calientes': '🌭', 
+        'Desgranados': '🌽', 'Picadas': '🍖', 'Sandwiches': '🥪', 'Patacones': '🍌', 
+        'Salchipapas': '🍟', 'Wraps': '🌯', 'Vegetariano': '🥦', 'Infantil': '🧒', 
+        'Jugos Agua': '🧃', 'Jugos Leche': '🥛', 'Limonadas': '🍋', 'Sodas': '🫧', 
+        'Mocktails': '🍹', 'Micheladas': '🍻', 'Cócteles': '🍸', 'Cervezas': '🍺', 
+        'Vinos': '🍷', 'Otras Bebidas': '🥤'
+    };
+    return emojis[category] || '🍽️';
+}
+
 async function checkPassword() {
     const passInput = document.getElementById('passInput');
     const password = passInput.value.trim();
@@ -114,7 +131,7 @@ async function loadMenuTable() {
                     <div style="display:flex;align-items:center;gap:10px">
                         ${d.image 
                             ? `<img src="${d.image}" style="width:40px;height:40px;border-radius:4px;object-fit:cover;">` 
-                            : '<div style="width:40px;height:40px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;">🍽️</div>'}
+                            : `<div style="width:40px;height:40px;background:#eee;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">${getCategoryEmoji(d.category)}</div>`}
                         <b>${d.name}</b>
                     </div>
                 </td>
@@ -273,7 +290,6 @@ async function loadConfig() {
             document.getElementById('maxCapacityInput').value = data.maxCapacity || 30;
         }
         
-        // --- MOSTRAR IMAGEN DEL DÍA SI EXISTE ---
         if (data.dailyMenuImage && document.getElementById('currentDailyImage')) {
             const img = document.getElementById('currentDailyImage');
             img.src = data.dailyMenuImage;
@@ -284,7 +300,6 @@ async function loadConfig() {
     } catch(err) {}
 }
 
-// --- NUEVA FUNCIÓN: GUARDAR IMAGEN DEL DÍA ---
 async function saveDailyMenuImage() {
     const fileInput = document.getElementById('dailyMenuInput');
     if (!fileInput.files || !fileInput.files[0]) return alert('Selecciona una imagen primero');
@@ -294,7 +309,6 @@ async function saveDailyMenuImage() {
 
     try {
         const imgBase64 = await convertToBase64(fileInput.files[0]);
-        // Usamos una ruta especial en config para esto
         const res = await fetch(API_URL + '/config/dailyMenuImage', {
             method: 'PUT',
             headers: getHeaders(),
