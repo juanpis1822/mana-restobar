@@ -386,3 +386,75 @@ button, input, select, textarea { font-family: inherit; }
     transform: translateY(-5px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
+
+/* ==========================================================================
+   ESTILOS NUEVOS PARA ACORDEONES DEL MENÚ
+   ========================================================================== */
+.menu-accordions {
+    max-width: 800px;
+    margin: 0 auto 3rem auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.accordion-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--white);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.accordion-header {
+    width: 100%;
+    padding: 1.2rem;
+    background: #fdf2e9; /* Color suave de fondo */
+    border: none;
+    outline: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.3s;
+}
+
+.accordion-header:hover {
+    background: #f5e6d8;
+}
+
+.accordion-header i {
+    transition: transform 0.3s ease;
+}
+
+/* Clase para girar la flecha cuando está abierto */
+.accordion-header.active i {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+    background: var(--white);
+}
+
+.filter-group {
+    padding: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+/* Ajuste a los botones dentro del acordeón */
+.filter-group .filter-btn {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+    flex-grow: 1; /* Para que ocupen espacio equitativo */
+    max-width: 200px;
+}
