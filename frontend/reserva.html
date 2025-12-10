@@ -6,36 +6,6 @@
     <title>Pedidos y Reservas - Maná Restobar</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Estilos específicos para las pestañas de reserva */
-        .reserva-tabs {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch; /* Suavidad en iOS */
-        }
-        
-        .reserva-tab-btn {
-            background: #fff;
-            border: 1px solid var(--secondary);
-            color: var(--secondary);
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .reserva-tab-btn.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
-    </style>
 </head>
 <body>
     
@@ -84,13 +54,16 @@
                 <div class="reserva-left">
                     <h2>1. Selecciona tus Platos</h2>
                     
-                    <div class="reserva-tabs" id="reservaTabs">
+                    <div class="reserva-tabs" id="mainTabs">
                         <button class="reserva-tab-btn active" onclick="filterReservaMenu('Todos')">Todos</button>
                         <button class="reserva-tab-btn" onclick="filterReservaMenu('Comida Rápida')">Comida Rápida</button>
                         <button class="reserva-tab-btn" onclick="filterReservaMenu('Restaurante')">Restaurante</button>
                         <button class="reserva-tab-btn" onclick="filterReservaMenu('Cafetería')">Cafetería</button>
                         <button class="reserva-tab-btn" onclick="filterReservaMenu('Bebidas')">Bebidas</button>
                     </div>
+
+                    <div class="reserva-tabs sub-tabs" id="subFilterTabs" style="display: none;">
+                        </div>
 
                     <div class="reserva-menu-grid" id="reservaMenuGrid">
                         <p style="text-align: center; color: #999;">Cargando menú...</p>
