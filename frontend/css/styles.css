@@ -422,3 +422,28 @@ button, input, select, textarea { font-family: inherit; }
     border-color: var(--secondary);
     box-shadow: none;
 }
+/* ==========================================================================
+   ESTILOS PARA EL BOTÓN PRINCIPAL DEL MENÚ (CORREGIDO)
+   ========================================================================== */
+.menu-header-container {
+    max-width: 800px; /* Mismo ancho que los acordeones */
+    margin: 0 auto 20px auto;
+    text-align: center;
+}
+
+.main-filter-btn {
+    width: 100%;
+    display: block;
+    padding: 1rem;
+    font-size: 1.1rem;
+    border-radius: 8px; /* Bordes menos redondeados para coincidir con acordeones */
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.main-filter-btn:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
