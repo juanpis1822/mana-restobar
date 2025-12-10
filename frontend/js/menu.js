@@ -4,8 +4,34 @@ let currentFilter = 'all';
 document.addEventListener('DOMContentLoaded', () => {
     renderMenuItems();
     setupFilters();
-    setupAccordions(); // Nueva función para los acordeones
+    setupAccordions();
 });
+
+// --- FUNCIÓN INTELIGENTE DE EMOJIS ---
+function getCategoryEmoji(category) {
+    const emojis = {
+        // Cafetería
+        'Clásicos Café': '☕', 'Nevados': '🍧', 'Frappés': '🥤', 
+        'Malteadas': '🍦', 'Bebidas Calientes': '🍵', 'Repostería': '🍰', 
+        'Postres': '🍮', 'Antojos': '🥐', 'Adicionales Dulces': '🍬',
+        
+        // Restaurante
+        'Desayunos': '🍳', 'Huevos': '🥚', 'Adicionales Sal': '🧀', 
+        'Carnes': '🥩', 'Aves': '🍗', 'Mariscos': '🍤', 
+        'Ceviches': '🍋', 'Ensaladas': '🥗', 'Adicionales Almuerzo': '🍚',
+        
+        // Comida Rápida
+        'Hamburguesas': '🍔', 'Perros Calientes': '🌭', 'Desgranados': '🌽', 
+        'Picadas': '🍖', 'Sandwiches': '🥪', 'Patacones': '🍌', 
+        'Salchipapas': '🍟', 'Wraps': '🌯', 'Vegetariano': '🥦', 'Infantil': '🧒',
+        
+        // Bebidas
+        'Jugos Agua': '🧃', 'Jugos Leche': '🥛', 'Limonadas': '🍋', 
+        'Sodas': '🫧', 'Mocktails': '🍹', 'Micheladas': '🍻', 
+        'Cócteles': '🍸', 'Cervezas': '🍺', 'Vinos': '🍷', 'Otras Bebidas': '🥤'
+    };
+    return emojis[category] || '🍽️'; // Emoji por defecto
+}
 
 async function renderMenuItems() {
     try {
@@ -15,25 +41,22 @@ async function renderMenuItems() {
 
         if (!grid) return;
 
-        // Filtrar platos según la categoría seleccionada
         let filtered = menu;
         if (currentFilter !== 'all') {
             filtered = menu.filter(m => m.category === currentFilter);
         }
 
-        // Mensaje si no hay platos en la categoría
         if (filtered.length === 0) {
             grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; font-size: 1.1rem; padding: 2rem;">No hay platos disponibles en esta categoría por el momento.</p>';
             return;
         }
 
-        // Generar HTML de las tarjetas
         grid.innerHTML = filtered.map(m => `
             <div class="menu-card">
-                <div class="menu-card-img">
+                <div class="menu-card-img" style="${!m.image ? 'background:#f4f4f4;' : ''}">
                     ${m.image 
                         ? `<img src="${m.image}" alt="${m.name}">` 
-                        : '<span style="font-size: 3rem;">🍽️</span>'}
+                        : `<span style="font-size: 4rem;">${getCategoryEmoji(m.category)}</span>`}
                 </div>
                 <div class="menu-card-content">
                     <h3>${m.name}</h3>
@@ -55,31 +78,23 @@ function setupFilters() {
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // Remover clase activa de todos
             buttons.forEach(b => b.classList.remove('active'));
-            // Activar el clickeado
             e.target.classList.add('active');
         });
     });
 }
 
-// LÓGICA DE LOS ACORDEONES
 function setupAccordions() {
     const acc = document.getElementsByClassName("accordion-header");
-    
     for (let i = 0; i < acc.length; i++) {
         acc[i].addEventListener("click", function() {
-            // Alternar clase activa para girar la flecha
             this.classList.toggle("active");
-            
-            // Abrir o cerrar el panel
             const panel = this.nextElementSibling;
             if (panel.style.maxHeight) {
                 panel.style.maxHeight = null;
             } else {
-                // Cerrar otros paneles abiertos (opcional, para efecto acordeón único)
                 closeAllAccordions();
-                this.classList.add("active"); // Re-activar el actual
+                this.classList.add("active");
                 panel.style.maxHeight = panel.scrollHeight + "px";
             }
         });
@@ -94,21 +109,16 @@ function closeAllAccordions() {
     }
 }
 
-// Función global llamada desde el HTML
 window.filterMenu = function(cat) {
     currentFilter = cat;
     renderMenuItems();
-    
-    // Scroll suave hacia los resultados si es móvil
     if(window.innerWidth < 768) {
         document.getElementById('menuGrid').scrollIntoView({ behavior: 'smooth' });
     }
-    
-    // Actualizar botones activos
     const buttons = document.querySelectorAll('.filter-btn');
     buttons.forEach(btn => {
         btn.classList.remove('active');
-        if (btn.innerText.trim() === cat || (cat === 'all' && btn.innerText.trim() === 'Ver Todo el Menú')) {
+        if (btn.innerText.trim() === cat || (cat === 'all' && btn.innerText.trim() === 'Todos')) {
             btn.classList.add('active');
         }
     });
